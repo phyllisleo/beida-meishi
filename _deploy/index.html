@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PKU Canteens 北大美食 v2</title>
+<style>
+  :root{
+    --pku:#94070a; --pku-dark:#6e0507; --pku-soft:#fbe9e9;
+    --ink:#1f2125; --muted:#8a8f98; --line:#ececef;
+    --bg:#f3f4f6; --green:#2fae6b; --amber:#f0a020; --red:#e0473d;
+    --card:#ffffff; --shadow:0 6px 22px rgba(0,0,0,.08); --blue:#4285f4;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(135deg,#d9d9de,#eceef2);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+  .phone{width:390px;height:800px;max-height:94vh;background:#000;border-radius:46px;padding:11px;
+    box-shadow:0 30px 70px rgba(0,0,0,.35);position:relative}
+  .screen{width:100%;height:100%;background:var(--bg);border-radius:36px;overflow:hidden;
+    position:relative;display:flex;flex-direction:column}
+  .notch{position:absolute;top:11px;left:50%;transform:translateX(-50%);
+    width:150px;height:28px;background:#000;border-radius:0 0 18px 18px;z-index:50}
+  .statusbar{height:44px;flex:0 0 44px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 26px;font-size:13px;font-weight:600;color:#fff;background:var(--pku)}
+  .statusbar .right{display:flex;gap:6px;align-items:center;font-size:12px}
+  .appbar{flex:0 0 auto;background:var(--pku);color:#fff;padding:2px 18px 14px;
+    display:flex;align-items:center;justify-content:space-between}
+  .brand .logo{font-size:18px;font-weight:800}.brand .cn{font-size:14px;opacity:.9;margin-left:7px}
+  .langtoggle{display:flex;background:rgba(255,255,255,.18);border-radius:20px;padding:3px;font-size:12px;font-weight:700}
+  .langtoggle button{border:0;background:transparent;color:#fff;padding:5px 11px;border-radius:16px;cursor:pointer;font-weight:700}
+  .langtoggle button.active{background:#fff;color:var(--pku)}
+  .body{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .body::-webkit-scrollbar{width:0}
+  .pad{padding:16px}
+  .view{display:none}.view.active{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* ── Hero ── */
+  .home-hero{background:linear-gradient(135deg,var(--pku),var(--pku-dark));border-radius:20px;
+    padding:24px 18px 24px;margin-bottom:14px;color:#fff;box-shadow:0 8px 28px rgba(148,7,10,.3)}
+  .hero-welcome-label{font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px}
+  .hero-welcome-text{font-size:18px;font-weight:800;line-height:1.45;margin-bottom:24px}
+  .hero-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+  .hero-btn{background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.32);border-radius:16px;
+    padding:20px 10px 18px;display:flex;flex-direction:column;align-items:center;gap:9px;
+    cursor:pointer;color:#fff;transition:background .15s,transform .12s}
+  .hero-btn:active{background:rgba(255,255,255,.26);transform:scale(.97)}
+  .hero-btn svg{width:42px;height:42px}
+  .hero-btn .hb-yuan{font-size:42px;font-weight:300;line-height:1}
+  .hero-btn .hb-label{font-size:13px;font-weight:800;text-align:center}
+  .hero-btn .hb-sub{font-size:10px;opacity:.72;text-align:center;line-height:1.3}
+  .hero-btn-wide{background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.32);border-radius:16px;
+    padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;color:#fff;
+    transition:background .15s,transform .12s;width:100%}
+  .hero-btn-wide:active{background:rgba(255,255,255,.26);transform:scale(.98)}
+  .hero-btn-wide .hbw-icon{font-size:28px;flex:0 0 auto}
+  .hero-btn-wide .hbw-text .hbw-label{font-size:14px;font-weight:800}
+  .hero-btn-wide .hbw-text .hbw-sub{font-size:11px;opacity:.75;margin-top:2px}
+  .hero-btn-wide .hbw-arr{margin-left:auto;font-size:16px;opacity:.7}
+
+  /* ── Campus Map ── */
+  .map-card{background:var(--card);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:14px}
+  .map-header{display:flex;align-items:center;justify-content:space-between;padding:11px 14px 9px}
+  .map-title{font-size:14px;font-weight:800}
+  .map-zoom{display:flex;gap:6px}
+  .map-zoom button{width:28px;height:28px;border:1.5px solid var(--line);background:#fff;border-radius:8px;
+    font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--ink)}
+  .map-wrap{position:relative;height:210px;overflow:hidden;cursor:grab;background:#d4eaf7;touch-action:none}
+  .map-wrap:active{cursor:grabbing}
+  .map-inner{position:absolute;inset:0;transform-origin:center center;will-change:transform}
+  .map-inner svg{width:100%;height:100%}
+  /* pin pulse */
+  @keyframes pulse{0%,100%{r:14;opacity:.25}50%{r:20;opacity:0}}
+  .user-pulse{animation:pulse 2s ease-in-out infinite}
+  /* info bar */
+  .map-info-bar{background:var(--pku-soft);border-top:1px solid #f0cece;padding:10px 14px;
+    display:none;align-items:center;gap:10px}
+  .map-info-bar.show{display:flex}
+  .mib-left{flex:1;min-width:0}
+  .mib-name{font-size:13px;font-weight:800;color:var(--ink)}
+  .mib-meta{font-size:11px;color:var(--muted);margin-top:2px}
+  .mib-btn{background:var(--pku);color:#fff;border:0;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:800;cursor:pointer;flex:0 0 auto}
+  .mib-close{font-size:18px;color:var(--muted);cursor:pointer;padding:0 4px}
+
+  /* ── Canteen / Dish cards ── */
+  .section-title{font-size:16px;font-weight:800;margin:18px 2px 10px;display:flex;align-items:center;justify-content:space-between}
+  .canteen{background:var(--card);border-radius:16px;padding:14px;box-shadow:var(--shadow);margin-bottom:12px;
+    cursor:pointer;display:flex;gap:13px;align-items:center;transition:transform .12s}
+  .canteen:active{transform:scale(.98)}
+  .canteen .thumb{width:54px;height:54px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:27px;flex:0 0 54px}
+  .canteen .info{flex:1;min-width:0}
+  .canteen .name{font-weight:800;font-size:15px;display:flex;align-items:center;gap:7px}
+  .canteen .name .cn{font-weight:600;color:var(--muted);font-size:12px}
+  .canteen .meta{font-size:12px;color:var(--muted);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap}
+  .crowd{margin-top:8px}.crowd .bar{height:6px;border-radius:6px;background:#eee;overflow:hidden}
+  .crowd .bar i{display:block;height:100%;border-radius:6px}
+  .crowd .lab{display:flex;justify-content:space-between;font-size:11px;margin-top:4px;font-weight:700}
+  .pill{font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px}
+  .pill.open{background:#e7f7ee;color:var(--green)}.pill.closed{background:#fdeceb;color:var(--red)}
+  .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:6px}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:20px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink)}
+  .chip.active{background:var(--pku);color:#fff;border-color:var(--pku)}
+  .dish{background:var(--card);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:12px;cursor:pointer;display:flex;transition:transform .12s}
+  .dish:active{transform:scale(.985)}
+  .dish .pic{width:96px;flex:0 0 96px;display:flex;align-items:center;justify-content:center;font-size:42px}
+  .dish .d-body{flex:1;padding:12px 12px 12px 4px;min-width:0;position:relative}
+  .dish .d-name{font-weight:800;font-size:15px}
+  .dish .d-py{font-size:11px;color:var(--muted);font-style:italic}
+  .dish .d-en{font-size:13px;color:var(--ink);margin-top:1px}
+  .dish .d-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:7px;font-size:11px;color:var(--muted)}
+  .tag{font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px}
+  .tag.veg{background:#e7f7ee;color:var(--green)}.tag.halal{background:#e8f0fe;color:#3b6fd4}
+  .tag.spicy{background:#fdeceb;color:var(--red)}.tag.new{background:#fff3df;color:var(--amber)}
+  .price{color:var(--pku);font-weight:800;font-size:14px}
+  .heart{position:absolute;top:10px;right:10px;font-size:20px;cursor:pointer;line-height:1;user-select:none}
+  .empty{text-align:center;color:var(--muted);padding:60px 30px}
+  .empty .ic{font-size:50px;margin-bottom:12px}.empty .t{font-weight:800;color:var(--ink);margin-bottom:6px;font-size:16px}
+  .news{background:#fff;border-radius:16px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:14px}
+  .news .banner{height:110px;display:flex;align-items:center;justify-content:center;font-size:54px}
+  .news .n-body{padding:13px 15px}
+  .news .n-title{font-weight:800;font-size:15px}
+  .news .n-sub{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.5}
+  .news .n-foot{display:flex;align-items:center;justify-content:space-between;margin-top:11px}
+  .rate{display:flex;gap:3px;font-size:18px;cursor:pointer}
+  .rate .s{color:#d9d9de}.rate .s.on{color:var(--amber)}
+  .n-date{font-size:11px;color:var(--muted)}
+  .disclaimer{font-size:10.5px;color:var(--muted);text-align:center;padding:4px 24px 10px;line-height:1.5}
+  /* Tab bar */
+  .tabbar{flex:0 0 auto;display:flex;background:#fff;border-top:1px solid var(--line);padding:8px 0 22px}
+  .tab{flex:1;text-align:center;border:0;background:transparent;cursor:pointer;color:var(--muted);font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px}
+  .tab .ti{font-size:21px;line-height:1}.tab.active{color:var(--pku)}
+  /* Sheet */
+  .overlay{position:absolute;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .25s;z-index:60;border-radius:36px}
+  .overlay.show{opacity:1;pointer-events:auto}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:26px 26px 36px 36px;
+    transform:translateY(102%);transition:transform .3s cubic-bezier(.2,.9,.3,1);z-index:61;max-height:92%;overflow-y:auto;padding-bottom:24px}
+  .sheet.show{transform:translateY(0)}
+  .sheet .grab{width:44px;height:5px;border-radius:5px;background:#dcdce0;margin:10px auto 4px}
+  .sheet .hero{height:150px;display:flex;align-items:center;justify-content:center;font-size:80px;margin:6px 16px 0;border-radius:18px}
+  .sheet .s-pad{padding:16px 20px 0}
+  .sheet .s-name{font-size:22px;font-weight:800}
+  .sheet .s-py{color:var(--muted);font-style:italic;font-size:13px;margin-top:2px}
+  .sheet .s-en{font-size:16px;margin-top:2px}
+  .sheet .s-row{display:flex;gap:18px;margin:14px 0;padding:13px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .sheet .s-row .cell{flex:1;text-align:center}
+  .sheet .s-row .cell b{display:block;font-size:17px}
+  .sheet .s-row .cell span{font-size:11px;color:var(--muted)}
+  .sheet h4{margin:14px 0 7px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  .sheet .ingr{display:flex;gap:7px;flex-wrap:wrap}
+  .sheet .ingr span{background:var(--bg);border-radius:8px;padding:6px 11px;font-size:13px}
+  .loc{display:flex;align-items:center;gap:8px;font-size:14px;background:var(--pku-soft);color:var(--pku-dark);padding:11px 14px;border-radius:12px;font-weight:700;margin-top:4px}
+  .btn{display:block;width:calc(100% - 40px);margin:18px 20px 0;background:var(--pku);color:#fff;border:0;border-radius:14px;padding:15px;font-size:15px;font-weight:800;cursor:pointer}
+  .btn.saved{background:#fff;color:var(--pku);border:2px solid var(--pku)}
+  .cn-head{background:linear-gradient(135deg,var(--pku),var(--pku-dark));color:#fff;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .cn-head .back{font-size:13px;font-weight:700;cursor:pointer;opacity:.9;margin-bottom:8px;display:inline-block}
+  .cn-head h2{margin:0;font-size:20px}
+  .cn-head .sub{font-size:13px;opacity:.92;margin-top:5px;display:flex;gap:12px;flex-wrap:wrap}
+  /* Review */
+  .review-section{padding:0 20px;margin-top:4px}
+  .review-section h4{margin:14px 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  .review-stars{display:flex;gap:6px;font-size:28px;margin-bottom:10px;cursor:pointer}
+  .review-stars .rs{color:#d9d9de;transition:color .1s}.review-stars .rs.on{color:var(--amber)}
+  .review-textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;
+    font-family:inherit;resize:none;outline:none;color:var(--ink);line-height:1.5;transition:border-color .15s}
+  .review-textarea:focus{border-color:var(--pku)}
+  .review-submit{width:100%;margin-top:10px;background:var(--pku);color:#fff;border:0;border-radius:12px;padding:12px;font-size:14px;font-weight:800;cursor:pointer}
+  .review-list{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+  .review-item{background:var(--bg);border-radius:12px;padding:10px 12px}
+  .review-item .ri-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .review-item .ri-name{font-size:12px;font-weight:800}.review-item .ri-stars{font-size:13px;color:var(--amber)}
+  .review-item .ri-text{font-size:13px;line-height:1.5}.review-item .ri-date{font-size:11px;color:var(--muted);margin-top:3px}
+  .no-reviews{font-size:13px;color:var(--muted);text-align:center;padding:10px 0 4px}
+  /* QR Modal */
+  .qr-modal{position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:80;display:flex;align-items:center;
+    justify-content:center;border-radius:36px;opacity:0;pointer-events:none;transition:opacity .25s}
+  .qr-modal.show{opacity:1;pointer-events:auto}
+  .qr-box{background:#fff;border-radius:24px;padding:24px 24px 20px;width:280px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .qr-box h3{margin:0 0 4px;font-size:17px;font-weight:800}.qr-box .qr-sub{font-size:12px;color:var(--muted);margin-bottom:18px}
+  .qr-svg{width:160px;height:160px;margin:0 auto 16px;display:block}
+  .qr-name{font-size:15px;font-weight:800;margin-bottom:2px}.qr-id{font-size:12px;color:var(--muted);margin-bottom:18px}
+  .qr-close{width:100%;background:var(--pku);color:#fff;border:0;border-radius:12px;padding:12px;font-size:14px;font-weight:800;cursor:pointer}
+  /* TopUp Modal */
+  .topup-modal{position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:80;display:flex;align-items:flex-end;
+    justify-content:center;border-radius:36px;opacity:0;pointer-events:none;transition:opacity .25s}
+  .topup-modal.show{opacity:1;pointer-events:auto}
+  .topup-sheet{background:#fff;border-radius:26px 26px 36px 36px;padding:20px 20px 32px;width:100%;box-shadow:0 -10px 40px rgba(0,0,0,.15)}
+  .topup-sheet .grab{width:44px;height:5px;border-radius:5px;background:#dcdce0;margin:0 auto 18px}
+  .topup-sheet h3{margin:0 0 4px;font-size:17px;font-weight:800}
+  .topup-sheet .tu-sub{font-size:12px;color:var(--muted);margin-bottom:16px}
+  .tu-balance{background:linear-gradient(135deg,var(--pku),var(--pku-dark));border-radius:16px;padding:16px 18px;color:#fff;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+  .tu-balance .bal-label{font-size:12px;opacity:.8}.tu-balance .bal-amount{font-size:26px;font-weight:800}
+  .tu-amounts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+  .tu-amt-btn{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:12px 6px;font-size:15px;font-weight:800;cursor:pointer;color:var(--ink)}
+  .tu-amt-btn.sel{border-color:var(--pku);background:var(--pku-soft);color:var(--pku)}
+  .tu-pay-btn{width:100%;background:var(--pku);color:#fff;border:0;border-radius:14px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;margin-top:4px}
+  .tu-close-link{display:block;text-align:center;font-size:13px;color:var(--muted);margin-top:12px;cursor:pointer;font-weight:600}
+  /* Toast */
+  .toast{position:absolute;bottom:96px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:rgba(0,0,0,.82);color:#fff;padding:11px 20px;border-radius:24px;font-size:13px;
+    font-weight:600;opacity:0;transition:.3s;z-index:70;white-space:nowrap}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ── Lunch Buddy ── */
+  .buddy-sheet-inner{padding:0 20px 8px}
+  .buddy-sheet-inner h2{margin:14px 0 4px;font-size:20px;font-weight:800}
+  .buddy-sheet-inner .bs-sub{font-size:13px;color:var(--muted);margin-bottom:14px}
+  .buddy-filter-group{margin-bottom:10px}
+  .buddy-filter-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px}
+  .buddy-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+  .buddy-chips::-webkit-scrollbar{display:none}
+  .buddy-chip{flex:0 0 auto;border:1.5px solid var(--line);background:#fff;border-radius:20px;
+    padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);white-space:nowrap;transition:.1s}
+  .buddy-chip.on{background:var(--pku);color:#fff;border-color:var(--pku)}
+  .buddy-divider{height:1px;background:var(--line);margin:12px 0}
+  .buddy-count{font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600}
+  .buddy-list{display:flex;flex-direction:column;gap:12px}
+  .buddy-card{background:var(--bg);border-radius:16px;padding:14px}
+  .buddy-card-top{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px}
+  .buddy-avatar{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex:0 0 48px}
+  .buddy-info{flex:1;min-width:0}
+  .buddy-name{font-size:15px;font-weight:800}
+  .buddy-meta{font-size:11px;color:var(--muted);margin-top:2px}
+  .buddy-times{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+  .buddy-time-chip{font-size:10px;font-weight:800;background:#e8eefb;color:#3b6fd4;padding:3px 8px;border-radius:8px}
+  .buddy-exp{font-size:12px;color:var(--ink);line-height:1.5;margin-bottom:8px;background:#fff;border-radius:10px;padding:8px 10px}
+  .buddy-tags-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+  .buddy-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:var(--pku-soft);color:var(--pku-dark)}
+  .buddy-lang-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#e8f6ed;color:var(--green)}
+  .buddy-invite-btn{width:100%;background:var(--pku);color:#fff;border:0;border-radius:12px;padding:11px;font-size:13px;font-weight:800;cursor:pointer}
+  .buddy-empty{text-align:center;padding:30px 20px;color:var(--muted)}
+  .buddy-empty .be-ic{font-size:40px;margin-bottom:8px}
+
+  /* dish photos + nav (v3) */
+  .dish .pic{width:96px;flex:0 0 96px;overflow:hidden;background:#eee}
+  .dish .pic img{width:100%;height:100%;object-fit:cover;display:block}
+  .sheet .hero{height:150px;margin:6px 16px 0;border-radius:18px;overflow:hidden}
+  .sheet .hero img{width:100%;height:100%;object-fit:cover;display:block}
+  .navgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+  .navbtn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:#fff;border:1px solid var(--line);
+    border-radius:14px;padding:12px 14px;cursor:pointer;box-shadow:var(--shadow);text-align:left}
+  .navbtn:active{transform:scale(.98)}
+  .navbtn .nb-t{font-weight:800;font-size:14px;color:var(--ink)}
+  .navbtn .nb-c{font-size:11px;color:var(--muted)}
+
+  /* v4: lunch buddy box, post form, message, sort, detail map */
+  .lb-card{background:#fff;border-radius:16px;padding:14px;box-shadow:var(--shadow);margin-bottom:14px}
+  .lb-head .lb-title{font-size:16px;font-weight:800}
+  .lb-head .lb-sub{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.45}
+  .lb-actions{display:flex;gap:8px;margin:12px 0 4px}
+  .lb-btn{flex:1;border:1.5px solid var(--pku);background:#fff;color:var(--pku);border-radius:12px;padding:11px;font-size:13px;font-weight:800;cursor:pointer}
+  .lb-btn.primary{background:var(--pku);color:#fff}
+  .lb-section{margin-top:12px}
+  .lb-sec-t{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:7px}
+  .lb-row{display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+  .lb-row-main{flex:1;min-width:0}
+  .lb-when{font-size:13px;font-weight:700}
+  .lb-note{font-size:12px;color:var(--muted);margin-top:2px}
+  .lb-row-btns{display:flex;gap:6px;flex:0 0 auto}
+  .lb-x{background:#fdeceb;color:var(--red);border:0;border-radius:9px;padding:8px 11px;font-size:12px;font-weight:800;cursor:pointer}
+  .lb-msg{background:#e8f0fe;color:#3b6fd4;border:0;border-radius:9px;padding:8px 11px;font-size:12px;font-weight:800;cursor:pointer}
+  .lb-empty{font-size:12px;color:var(--muted);padding:4px 2px}
+  .lb-postlink{width:100%;background:var(--pku-soft);color:var(--pku-dark);border:0;border-radius:12px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;margin-bottom:14px}
+  .pf-field{margin-bottom:13px;display:flex;flex-direction:column;gap:6px}
+  .pf-field label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  .pf-field select,.pf-field textarea{border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;font-size:14px;font-family:inherit;outline:none;color:var(--ink);resize:none}
+  .msg-quick{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:11px}
+  .msg-quick button{background:var(--bg);border:1px solid var(--line);border-radius:18px;padding:8px 13px;font-size:12px;cursor:pointer;color:var(--ink)}
+  .sortbar{display:flex;align-items:center;gap:8px;margin:2px 2px 12px}
+  .sortbar .sl{font-size:12px;font-weight:700;color:var(--muted)}
+  .sortbar select{border:1.5px solid var(--line);border-radius:10px;padding:7px 11px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink);outline:none;flex:1}
+  .detail-map{width:100%;aspect-ratio:34/21;border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-top:4px;background:#eaf1f6}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="screen">
+    <div class="statusbar"><span>9:41</span><span class="right">📶 5G &nbsp;🔋 82%</span></div>
+    <div class="appbar">
+      <div class="brand"><span class="logo">PKU Canteens</span><span class="cn">北大美食</span></div>
+      <div class="langtoggle">
+        <button id="lang-en" class="active" onclick="setLang('en')">EN</button>
+        <button id="lang-zh" onclick="setLang('zh')">中</button>
+      </div>
+    </div>
+
+    <div class="body" id="body">
+      <!-- HOME -->
+      <div class="view active" id="view-home">
+        <div class="pad">
+
+          <!-- Hero -->
+          <div class="home-hero">
+            <div class="hero-welcome-label" data-i18n="welcomeLabel"></div>
+            <div class="hero-welcome-text" data-i18n="welcomeText"></div>
+            <div class="hero-row">
+              <div class="hero-btn" onclick="showQR()">
+                <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="2" y="2" width="16" height="16" rx="2" stroke="white" stroke-width="2" fill="none"/>
+                  <rect x="6" y="6" width="8" height="8" rx="1" fill="white"/>
+                  <rect x="26" y="2" width="16" height="16" rx="2" stroke="white" stroke-width="2" fill="none"/>
+                  <rect x="30" y="6" width="8" height="8" rx="1" fill="white"/>
+                  <rect x="2" y="26" width="16" height="16" rx="2" stroke="white" stroke-width="2" fill="none"/>
+                  <rect x="6" y="30" width="8" height="8" rx="1" fill="white"/>
+                  <rect x="26" y="26" width="4" height="4" rx=".5" fill="white"/>
+                  <rect x="32" y="26" width="4" height="4" rx=".5" fill="white"/>
+                  <rect x="38" y="26" width="4" height="4" rx=".5" fill="white"/>
+                  <rect x="26" y="32" width="4" height="4" rx=".5" fill="white"/>
+                  <rect x="38" y="32" width="4" height="4" rx=".5" fill="white"/>
+                  <rect x="32" y="38" width="4" height="4" rx=".5" fill="white"/>
+                  <rect x="26" y="38" width="4" height="4" rx=".5" fill="white"/>
+                  <rect x="38" y="38" width="4" height="4" rx=".5" fill="white"/>
+                </svg>
+                <div class="hb-label" data-i18n="myQR"></div>
+                <div class="hb-sub" data-i18n="myQRSub"></div>
+              </div>
+              <div class="hero-btn" onclick="showTopUp()">
+                <div class="hb-yuan">¥</div>
+                <div class="hb-label" data-i18n="topUp"></div>
+                <div class="hb-sub" data-i18n="topUpSub"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lunch Buddy box -->
+          <div class="lb-card">
+            <div class="lb-head">
+              <div class="lb-title">🍜 <span>Lunch Buddy</span></div>
+              <div class="lb-sub" id="lb-sub"></div>
+            </div>
+            <div class="lb-actions">
+              <button class="lb-btn primary" id="lb-find" onclick="openBuddyFinder()"></button>
+              <button class="lb-btn" id="lb-post" onclick="openPostForm()"></button>
+            </div>
+            <div id="buddy-home"></div>
+          </div>
+
+          <!-- Campus Map -->
+          <div class="map-card">
+            <div class="map-header">
+              <span class="map-title" data-i18n="mapTitle"></span>
+              <div class="map-zoom">
+                <button onclick="zoomMap(-0.4)">−</button>
+                <button onclick="zoomMap(0.4)">+</button>
+              </div>
+            </div>
+            <div class="map-wrap" id="map-wrap">
+              <div class="map-inner" id="map-inner">
+                <svg viewBox="0 0 340 210" xmlns="http://www.w3.org/2000/svg" style="width:340px;height:210px;display:block">
+                  <!-- Sky background -->
+                  <rect width="340" height="210" fill="#c8e0f0"/>
+                  <!-- Mountain silhouettes -->
+                  <path d="M0,180 Q40,155 80,170 Q120,148 160,165 Q200,145 240,162 Q280,142 320,158 L340,165 L340,210 L0,210Z" fill="#aaccdf" opacity="0.6"/>
+                  <!-- Campus ground -->
+                  <path d="M18,8 L260,8 L272,16 L322,16 L322,202 L18,202Z" fill="#eeeae2" stroke="#d4c9b0" stroke-width="1"/>
+                  <!-- East extension -->
+                  <rect x="260" y="8" width="62" height="100" fill="#e8e4dc" stroke="#d4c9b0" stroke-width="0.5"/>
+                  <!-- Green areas / parks -->
+                  <rect x="24" y="14" width="55" height="35" rx="4" fill="#b8d498"/>
+                  <rect x="24" y="55" width="30" height="40" rx="4" fill="#c0da9e"/>
+                  <rect x="200" y="14" width="55" height="28" rx="4" fill="#b8d498"/>
+                  <rect x="270" y="100" width="45" height="40" rx="3" fill="#c0da9e"/>
+                  <rect x="180" y="150" width="40" height="30" rx="4" fill="#c0da9e"/>
+                  <!-- Main roads -->
+                  <rect x="138" y="8" width="7" height="202" fill="#ccc4b2" opacity="0.7"/>
+                  <rect x="18" y="118" width="304" height="6" fill="#ccc4b2" opacity="0.7"/>
+                  <rect x="18" y="70" width="304" height="4" fill="#ccc4b2" opacity="0.5"/>
+                  <!-- Inner roads -->
+                  <rect x="85" y="8" width="4" height="202" fill="#ccc4b2" opacity="0.4"/>
+                  <rect x="210" y="8" width="4" height="202" fill="#ccc4b2" opacity="0.4"/>
+                  <!-- Building blocks (simplified) -->
+                  <rect x="90" y="14" width="42" height="18" rx="2" fill="#ddd6c8"/>
+                  <rect x="148" y="14" width="54" height="20" rx="2" fill="#ddd6c8"/>
+                  <rect x="220" y="46" width="36" height="16" rx="2" fill="#ddd6c8"/>
+                  <rect x="270" y="20" width="44" height="22" rx="2" fill="#d8d0c4"/>
+                  <rect x="270" y="50" width="44" height="20" rx="2" fill="#d8d0c4"/>
+                  <rect x="90" y="130" width="42" height="18" rx="2" fill="#ddd6c8"/>
+                  <rect x="148" y="135" width="55" height="16" rx="2" fill="#ddd6c8"/>
+                  <rect x="218" y="130" width="36" height="16" rx="2" fill="#ddd6c8"/>
+                  <rect x="24" y="100" width="54" height="14" rx="2" fill="#ddd6c8"/>
+                  <rect x="24" y="165" width="50" height="18" rx="2" fill="#ddd6c8"/>
+                  <rect x="90" y="170" width="40" height="18" rx="2" fill="#ddd6c8"/>
+                  <rect x="270" y="148" width="44" height="18" rx="2" fill="#d8d0c4"/>
+                  <rect x="270" y="172" width="44" height="20" rx="2" fill="#d8d0c4"/>
+                  <!-- Weiming Lake (未名湖) -->
+                  <path d="M148,40 C158,30 178,27 198,32 C218,37 232,50 234,66 C236,82 226,96 210,104 C194,112 174,112 160,104 C146,96 136,82 136,68 C136,55 140,46 148,40Z" fill="#7bbcdc" stroke="#5aaac8" stroke-width="1"/>
+                  <!-- Lake island (南湖岛) -->
+                  <ellipse cx="186" cy="72" rx="12" ry="9" fill="#8ebe78" stroke="#76aa62" stroke-width="0.5"/>
+                  <!-- Boya Pagoda (博雅塔) -->
+                  <g transform="translate(220,52)">
+                    <rect x="-4" y="-2" width="8" height="14" rx="0.5" fill="#8a7055"/>
+                    <polygon points="-6,0 6,0 0,-8" fill="#6e5840"/>
+                    <polygon points="-4.5,4 4.5,4 0,-2" fill="#7a6448"/>
+                  </g>
+                  <text x="228" y="72" font-size="6" fill="#5a4530" font-weight="600">博雅塔</text>
+
+                  <!-- User location (You are here) -->
+                  <g transform="translate(142,152)">
+                    <circle class="user-pulse" cx="0" cy="0" r="14" fill="#4285f4" opacity="0.25"/>
+                    <circle cx="0" cy="0" r="9" fill="#4285f4" opacity="0.35"/>
+                    <circle cx="0" cy="0" r="6" fill="#4285f4"/>
+                    <circle cx="0" cy="0" r="3" fill="white"/>
+                  </g>
+                  <text x="142" y="170" text-anchor="middle" font-size="7" fill="#4285f4" font-weight="800">YOU</text>
+
+                  <!-- Canteen pins: teardrop shape using circle + triangle -->
+                  <!-- 成府园食堂 -->
+                  <g id="pin-chengfu" class="map-canteen-pin" onclick="showMapPin('chengfu')" style="cursor:pointer">
+                    <circle cx="200" cy="20" r="10" fill="#94070a"/>
+                    <polygon points="196,28 204,28 200,36" fill="#94070a"/>
+                    <text x="200" y="24" text-anchor="middle" font-size="9" fill="white">🍽</text>
+                    <text x="200" y="46" text-anchor="middle" font-size="6.5" fill="#1f2125" font-weight="bold">成府园</text>
+                  </g>
+                  <!-- 畅春园食堂 -->
+                  <g id="pin-changchun" class="map-canteen-pin" onclick="showMapPin('changchun')" style="cursor:pointer">
+                    <circle cx="46" cy="90" r="10" fill="#94070a"/>
+                    <polygon points="42,98 50,98 46,106" fill="#94070a"/>
+                    <text x="46" y="94" text-anchor="middle" font-size="9" fill="white">🍽</text>
+                    <text x="46" y="114" text-anchor="middle" font-size="6.5" fill="#1f2125" font-weight="bold">畅春园</text>
+                  </g>
+                  <!-- 农园食堂 -->
+                  <g id="pin-nongyuan" class="map-canteen-pin" onclick="showMapPin('nongyuan')" style="cursor:pointer">
+                    <circle cx="226" cy="138" r="10" fill="#94070a"/>
+                    <polygon points="222,146 230,146 226,154" fill="#94070a"/>
+                    <text x="226" y="142" text-anchor="middle" font-size="9" fill="white">🍽</text>
+                    <text x="226" y="162" text-anchor="middle" font-size="6.5" fill="#1f2125" font-weight="bold">农园</text>
+                  </g>
+                  <!-- 家园食堂 -->
+                  <g id="pin-jiayuan" class="map-canteen-pin" onclick="showMapPin('jiayuan')" style="cursor:pointer">
+                    <circle cx="170" cy="178" r="10" fill="#94070a"/>
+                    <polygon points="166,186 174,186 170,194" fill="#94070a"/>
+                    <text x="170" y="182" text-anchor="middle" font-size="9" fill="white">🍽</text>
+                    <text x="170" y="200" text-anchor="middle" font-size="6.5" fill="#1f2125" font-weight="bold">家园</text>
+                  </g>
+                  <!-- 学五食堂 -->
+                  <g id="pin-xuewu" class="map-canteen-pin" onclick="showMapPin('xuewu')" style="cursor:pointer">
+                    <circle cx="108" cy="160" r="10" fill="#94070a"/>
+                    <polygon points="104,168 112,168 108,176" fill="#94070a"/>
+                    <text x="108" y="164" text-anchor="middle" font-size="9" fill="white">🍽</text>
+                    <text x="108" y="184" text-anchor="middle" font-size="6.5" fill="#1f2125" font-weight="bold">学五</text>
+                  </g>
+                  <!-- 燕南食堂 -->
+                  <g id="pin-yannan" class="map-canteen-pin" onclick="showMapPin('yannan')" style="cursor:pointer">
+                    <circle cx="100" cy="124" r="10" fill="#94070a"/>
+                    <polygon points="96,132 104,132 100,140" fill="#94070a"/>
+                    <text x="100" y="128" text-anchor="middle" font-size="9" fill="white">🍽</text>
+                    <text x="100" y="148" text-anchor="middle" font-size="6.5" fill="#1f2125" font-weight="bold">燕南</text>
+                  </g>
+                  <!-- 中关园食堂 -->
+                  <g id="pin-zhongguanyuan" class="map-canteen-pin" onclick="showMapPin('zhongguanyuan')" style="cursor:pointer">
+                    <circle cx="295" cy="124" r="10" fill="#94070a"/>
+                    <polygon points="291,132 299,132 295,140" fill="#94070a"/>
+                    <text x="295" y="128" text-anchor="middle" font-size="9" fill="white">🍽</text>
+                    <text x="295" y="148" text-anchor="middle" font-size="6.5" fill="#1f2125" font-weight="bold">中关园</text>
+                  </g>
+
+                  <!-- Legend -->
+                  <rect x="240" y="188" width="78" height="18" rx="4" fill="white" opacity="0.85"/>
+                  <circle cx="249" cy="197" r="5" fill="#94070a"/>
+                  <text x="257" y="200" font-size="7" fill="#1f2125">Canteen  </text>
+                  <circle cx="249" cy="197" r="3" fill="white" transform="translate(40,0)"/>
+                  <circle cx="289" cy="197" r="5" fill="#4285f4"/>
+                  <circle cx="289" cy="197" r="2.5" fill="white"/>
+                  <text x="297" y="200" font-size="7" fill="#1f2125">You</text>
+                </svg>
+              </div>
+              <!-- Map info bar (shown when pin tapped) -->
+              <div class="map-info-bar" id="map-info-bar">
+                <div class="mib-left">
+                  <div class="mib-name" id="mib-name"></div>
+                  <div class="mib-meta" id="mib-meta"></div>
+                </div>
+                <button class="mib-btn" id="mib-btn">Menu →</button>
+                <span class="mib-close" onclick="clearMapPin()">×</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Canteen list -->
+          <div class="section-title"><span data-i18n="nearYou"></span></div>
+          <div id="canteen-list"></div>
+          <div class="disclaimer" data-i18n="dataNote"></div>
+        </div>
+      </div>
+
+      <!-- MENU -->
+      <div class="view" id="view-menu">
+        <div class="pad">
+          <div id="menu-head"></div>
+          <div class="chips" id="filter-chips"></div>
+          <div id="dish-list"></div>
+        </div>
+      </div>
+
+      <!-- WISHLIST -->
+      <div class="view" id="view-wishlist">
+        <div class="pad">
+          <div class="section-title"><span data-i18n="wishTitle"></span></div>
+          <div id="wishlist-list"></div>
+        </div>
+      </div>
+
+      <!-- NEWS -->
+      <div class="view" id="view-news">
+        <div class="pad">
+          <div class="section-title"><span data-i18n="newsTitle"></span></div>
+          <div id="news-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabbar">
+      <button class="tab active" data-tab="home" onclick="setTab('home')"><span class="ti">🏠</span><span data-i18n="tabHome"></span></button>
+      <button class="tab" data-tab="menu" onclick="goAllMenu()"><span class="ti">🍽️</span><span data-i18n="tabMenu"></span></button>
+      <button class="tab" data-tab="wishlist" onclick="setTab('wishlist')"><span class="ti">❤️</span><span data-i18n="tabWish"></span></button>
+      <button class="tab" data-tab="news" onclick="setTab('news')"><span class="ti">📰</span><span data-i18n="tabNews"></span></button>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closeSheet()"></div>
+    <div class="sheet" id="sheet"></div>
+
+    <!-- QR Modal -->
+    <div class="qr-modal" id="qr-modal" onclick="closeQR()">
+      <div class="qr-box" onclick="event.stopPropagation()">
+        <h3 data-i18n="myQRTitle"></h3>
+        <div class="qr-sub" data-i18n="myQRDesc"></div>
+        <svg class="qr-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="100" fill="white"/>
+          <rect x="5" y="5" width="28" height="28" fill="#1f2125" rx="3"/><rect x="9" y="9" width="20" height="20" fill="white" rx="1"/><rect x="13" y="13" width="12" height="12" fill="#1f2125" rx="1"/>
+          <rect x="67" y="5" width="28" height="28" fill="#1f2125" rx="3"/><rect x="71" y="9" width="20" height="20" fill="white" rx="1"/><rect x="75" y="13" width="12" height="12" fill="#1f2125" rx="1"/>
+          <rect x="5" y="67" width="28" height="28" fill="#1f2125" rx="3"/><rect x="9" y="71" width="20" height="20" fill="white" rx="1"/><rect x="13" y="75" width="12" height="12" fill="#1f2125" rx="1"/>
+          <rect x="40" y="5" width="4" height="4" fill="#1f2125"/><rect x="48" y="5" width="4" height="4" fill="#1f2125"/><rect x="56" y="5" width="4" height="4" fill="#1f2125"/>
+          <rect x="40" y="13" width="4" height="4" fill="#1f2125"/><rect x="56" y="13" width="4" height="4" fill="#1f2125"/>
+          <rect x="44" y="21" width="4" height="4" fill="#1f2125"/><rect x="52" y="17" width="4" height="4" fill="#1f2125"/>
+          <rect x="5" y="40" width="4" height="4" fill="#1f2125"/><rect x="13" y="44" width="4" height="4" fill="#1f2125"/><rect x="21" y="40" width="4" height="4" fill="#1f2125"/>
+          <rect x="5" y="52" width="4" height="4" fill="#1f2125"/><rect x="17" y="56" width="4" height="4" fill="#1f2125"/><rect x="5" y="60" width="4" height="4" fill="#1f2125"/>
+          <rect x="40" y="40" width="4" height="4" fill="#1f2125"/><rect x="52" y="40" width="4" height="4" fill="#1f2125"/><rect x="60" y="44" width="4" height="4" fill="#1f2125"/>
+          <rect x="44" y="48" width="4" height="4" fill="#1f2125"/><rect x="56" y="52" width="4" height="4" fill="#1f2125"/><rect x="40" y="56" width="4" height="4" fill="#1f2125"/>
+          <rect x="68" y="40" width="4" height="4" fill="#1f2125"/><rect x="76" y="44" width="4" height="4" fill="#1f2125"/><rect x="84" y="40" width="4" height="4" fill="#1f2125"/><rect x="92" y="40" width="4" height="4" fill="#1f2125"/>
+          <rect x="68" y="52" width="4" height="4" fill="#1f2125"/><rect x="80" y="56" width="4" height="4" fill="#1f2125"/><rect x="92" y="52" width="4" height="4" fill="#1f2125"/>
+          <rect x="40" y="68" width="4" height="4" fill="#1f2125"/><rect x="52" y="72" width="4" height="4" fill="#1f2125"/><rect x="60" y="68" width="4" height="4" fill="#1f2125"/>
+          <rect x="44" y="80" width="4" height="4" fill="#1f2125"/><rect x="56" y="84" width="4" height="4" fill="#1f2125"/><rect x="40" y="88" width="4" height="4" fill="#1f2125"/>
+          <rect x="72" y="72" width="4" height="4" fill="#1f2125"/><rect x="84" y="76" width="4" height="4" fill="#1f2125"/><rect x="76" y="84" width="4" height="4" fill="#1f2125"/><rect x="92" y="68" width="4" height="4" fill="#1f2125"/><rect x="88" y="88" width="4" height="4" fill="#1f2125"/>
+          <rect x="44" y="44" width="12" height="12" fill="#94070a" rx="2"/>
+        </svg>
+        <div class="qr-name">Li Ming 李明</div>
+        <div class="qr-id" data-i18n="studentId"></div>
+        <button class="qr-close" onclick="closeQR()" data-i18n="closeBtn"></button>
+      </div>
+    </div>
+
+    <!-- TopUp Modal -->
+    <div class="topup-modal" id="topup-modal" onclick="closeTopUp()">
+      <div class="topup-sheet" onclick="event.stopPropagation()">
+        <div class="grab"></div>
+        <h3 data-i18n="topUpTitle"></h3>
+        <div class="tu-sub" data-i18n="topUpDesc"></div>
+        <div class="tu-balance">
+          <div><div class="bal-label" data-i18n="currentBalance"></div><div class="bal-amount">¥ 38.50</div></div>
+          <span style="font-size:28px">💳</span>
+        </div>
+        <div class="tu-amounts" id="tu-amounts"></div>
+        <button class="tu-pay-btn" onclick="doTopUp()" data-i18n="confirmTopUp"></button>
+        <span class="tu-close-link" onclick="closeTopUp()" data-i18n="cancelBtn"></span>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+</div>
+
+<script>
+/* ====================================================
+   PKU Canteens v2 — Campus Map + Lunch Buddy
+   ==================================================== */
+
+const i18n = {
+  en:{
+    welcomeLabel:"Welcome to PKU Canteens",
+    welcomeText:"Good day 👋  What would you like to eat today?",
+    myQR:"My QR Code", myQRSub:"Scan to pay\nat canteen",
+    topUp:"Top Up Card", topUpSub:"Add balance\nto student card",
+    buddyLabel:"Find a Lunch Buddy", buddySub:"Meet a fellow PKU student over a meal",
+    mapTitle:"📍 Campus Canteen Map",
+    nearYou:"Canteens on campus",
+    dataNote:"Crowd levels & wait times are simulated for this prototype.",
+    open:"Open", closed:"Closed", full:"full", wait:"min wait", min:"min walk",
+    tabHome:"Home", tabMenu:"Menu", tabWish:"Wishlist", tabNews:"News",
+    backCanteens:"‹ All canteens", allCanteens:"All dishes",
+    filterAll:"All", filterVeg:"Vegetarian", filterHalal:"Halal", filterSpicy:"Spicy", filterNew:"New",
+    cal:"kcal",
+    wishTitle:"My Wishlist",
+    wishEmptyT:"No saved dishes yet", wishEmptyS:"Tap ♡ on any dish to save it.",
+    newsTitle:"New on campus", rateAsk:"Rate this dish:",
+    ingredients:"Ingredients", calories:"Calories", rating:"Rating", price:"Price",
+    location:"Find it at", saveBtn:"♡ Save to wishlist", savedBtn:"✓ Saved to wishlist",
+    addedToast:"Added to wishlist ❤️", removedToast:"Removed from wishlist",
+    thanksRate:"Thanks for your feedback! ⭐",
+    menuHint:"Browse every dish — with pinyin, English, ingredients & calories.",
+    myQRTitle:"Payment QR Code", myQRDesc:"Show this to the cashier to pay",
+    studentId:"Student ID: 2024310001", closeBtn:"Close",
+    topUpTitle:"Top Up Student Card", topUpDesc:"Select an amount to add to your balance",
+    currentBalance:"Current balance", confirmTopUp:"Confirm Top Up", cancelBtn:"Cancel",
+    topUpDone:"¥{amt} added to your card! 🎉",
+    reviewTitle:"Reviews", reviewPlaceholder:"Share your thoughts — compliment a chef, suggest an improvement…",
+    reviewSubmit:"Submit Review", reviewStarPrompt:"Your rating:", reviewThanks:"Thanks for your review! 🙏",
+    reviewNoStar:"Please select a star rating first.", noReviews:"No reviews yet — be the first!",
+    buddySheetTitle:"Find a Lunch Buddy 🍜",
+    buddySheetSub:"Connect with a fellow PKU student over a meal",
+    filterTime:"Time", filterDept:"Department", filterInterests:"Interests",
+    filterExp:"Experience", filterLang:"Language",
+    buddyCountOne:"{n} student available", buddyCountMany:"{n} students available",
+    buddyInvite:"Invite to lunch", buddyInvited:"Request sent! ✓",
+    buddyEmpty:"No matches — try adjusting your filters",
+    buddyInviteToast:"Lunch request sent to {name}! 🍜",
+  },
+  zh:{
+    welcomeLabel:"欢迎来到北大美食",
+    welcomeText:"你好 👋  今天想吃什么？",
+    myQR:"支付码", myQRSub:"扫码\n在食堂结账",
+    topUp:"充值", topUpSub:"为学生卡\n充值",
+    buddyLabel:"寻找饭搭子", buddySub:"和北大同学一起用餐",
+    mapTitle:"📍 校园食堂地图",
+    nearYou:"校内食堂",
+    dataNote:"拥挤度与等待时间为原型演示模拟数据。",
+    open:"营业中", closed:"已打烊", full:"满", wait:"分钟等待", min:"分钟步行",
+    tabHome:"首页", tabMenu:"菜单", tabWish:"心愿单", tabNews:"资讯",
+    backCanteens:"‹ 全部食堂", allCanteens:"全部菜品",
+    filterAll:"全部", filterVeg:"素食", filterHalal:"清真", filterSpicy:"辣", filterNew:"新品",
+    cal:"千卡",
+    wishTitle:"我的心愿单",
+    wishEmptyT:"还没有收藏的菜品", wishEmptyS:"点击任意菜品的 ♡ 即可收藏。",
+    newsTitle:"校园新品", rateAsk:"为这道菜评分：",
+    ingredients:"配料", calories:"热量", rating:"评分", price:"价格",
+    location:"前往", saveBtn:"♡ 加入心愿单", savedBtn:"✓ 已加入心愿单",
+    addedToast:"已加入心愿单 ❤️", removedToast:"已从心愿单移除",
+    thanksRate:"感谢你的反馈！⭐",
+    menuHint:"浏览所有菜品 — 含拼音、英文、配料与热量。",
+    myQRTitle:"支付码", myQRDesc:"向收银员出示此码进行支付",
+    studentId:"学号：2024310001", closeBtn:"关闭",
+    topUpTitle:"学生卡充值", topUpDesc:"选择充值金额",
+    currentBalance:"当前余额", confirmTopUp:"确认充值", cancelBtn:"取消",
+    topUpDone:"已成功充值 ¥{amt}！🎉",
+    reviewTitle:"评价", reviewPlaceholder:"分享你的看法——为厨师点赞或提出建议…",
+    reviewSubmit:"提交评价", reviewStarPrompt:"你的评分：", reviewThanks:"感谢你的评价！🙏",
+    reviewNoStar:"请先选择星级评分。", noReviews:"暂无评价 — 来第一个评价吧！",
+    buddySheetTitle:"寻找饭搭子 🍜",
+    buddySheetSub:"和北大同学一起用餐，拓展人脉",
+    filterTime:"时间", filterDept:"院系", filterInterests:"兴趣",
+    filterExp:"经历", filterLang:"语言",
+    buddyCountOne:"1 位同学空闲", buddyCountMany:"{n} 位同学空闲",
+    buddyInvite:"邀请一起吃饭", buddyInvited:"已发送邀请 ✓",
+    buddyEmpty:"暂无匹配 — 试试调整筛选条件",
+    buddyInviteToast:"已向 {name} 发送午饭邀请！🍜",
+  }
+};
+
+/* ── Data ── */
+const canteens = [
+  {id:"jiayuan",   en:"Jiayuan Canteen",        zh:"家园食堂",   emoji:"🏯", bg:"#fde8e8", crowd:78, walk:3,  open:true,  hours:"06:30–20:30", floors:[5,4,4,2]},
+  {id:"nongyuan",  en:"Nongyuan Canteen",        zh:"农园食堂",   emoji:"🌾", bg:"#e8f6ed", crowd:45, walk:6,  open:true,  hours:"06:30–21:00", floors:[6,10]},
+  {id:"yannan",    en:"Yannan Canteen",          zh:"燕南食堂",   emoji:"🍲", bg:"#e8eefb", crowd:30, walk:8,  open:true,  hours:"07:00–20:00", floors:[10]},
+  {id:"xuewu",     en:"Xuewu (Canteen No.5)",   zh:"学五食堂",   emoji:"🥢", bg:"#fff3df", crowd:92, walk:5,  open:true,  hours:"06:30–20:30", floors:[18]},
+  {id:"chengfu",   en:"Chengfuyuan Canteen",    zh:"成府园食堂", emoji:"🏛️", bg:"#f0e8fb", crowd:52, walk:12, open:true,  hours:"07:00–20:00"},
+  {id:"changchun", en:"Changchunyuan Canteen",  zh:"畅春园食堂", emoji:"🌸", bg:"#e8f3fb", crowd:38, walk:15, open:true,  hours:"06:30–19:30"},
+  {id:"zhongguanyuan", en:"Zhongguanyuan Canteen", zh:"中关园食堂", emoji:"🏢", bg:"#eefbe8", crowd:61, walk:18, open:false, hours:"opens 16:30"},
+];
+
+const dishes = [
+  {id:1, zh:"宫保鸡丁", py:"Gōngbǎo jīdīng", en:"Kung Pao Chicken", img:"images/dish_1.jpg", bg:"#fde8e8", price:13, cal:540, rating:4.6, tags:["spicy"], ingr_en:["Chicken", "Peanuts", "Chili", "Scallion"], ingr_zh:["鸡肉", "花生", "干辣椒", "葱"]},
+  {id:2, zh:"麻婆豆腐", py:"Mápó dòufu", en:"Mapo Tofu", img:"images/dish_2.jpg", bg:"#e8f6ed", price:9, cal:330, rating:4.4, tags:["spicy", "veg"], ingr_en:["Tofu", "Doubanjiang", "Sichuan pepper"], ingr_zh:["豆腐", "豆瓣酱", "花椒"]},
+  {id:3, zh:"西红柿炒鸡蛋", py:"Xīhóngshì chǎo jīdàn", en:"Tomato & Egg Stir-fry", img:"images/dish_3.jpg", bg:"#e8f6ed", price:8, cal:260, rating:4.7, tags:["veg"], ingr_en:["Tomato", "Egg", "Scallion", "Sugar"], ingr_zh:["西红柿", "鸡蛋", "葱", "糖"]},
+  {id:4, zh:"红烧肉", py:"Hóngshāo ròu", en:"Braised Pork Belly", img:"images/dish_4.jpg", bg:"#fde8e8", price:15, cal:620, rating:4.8, tags:[], ingr_en:["Pork belly", "Soy sauce", "Rock sugar"], ingr_zh:["五花肉", "酱油", "冰糖"]},
+  {id:5, zh:"兰州拉面", py:"Lánzhōu lāmiàn", en:"Lanzhou Beef Noodles", img:"images/dish_5.jpg", bg:"#fff3df", price:12, cal:480, rating:4.5, tags:["halal"], ingr_en:["Hand-pulled noodles", "Beef", "Radish"], ingr_zh:["拉面", "牛肉", "萝卜"]},
+  {id:6, zh:"青椒土豆丝", py:"Qīngjiāo tǔdòusī", en:"Shredded Potato & Pepper", img:"images/dish_6.jpg", bg:"#e8f6ed", price:6, cal:210, rating:4.3, tags:["veg"], ingr_en:["Potato", "Green pepper", "Vinegar", "Garlic"], ingr_zh:["土豆", "青椒", "醋", "蒜"]},
+  {id:7, zh:"鱼香肉丝", py:"Yúxiāng ròusī", en:"Yuxiang Shredded Pork", img:"images/dish_7.jpg", bg:"#fde8e8", price:12, cal:450, rating:4.6, tags:["spicy"], ingr_en:["Pork", "Wood-ear", "Carrot"], ingr_zh:["猪肉", "木耳", "胡萝卜"]},
+  {id:8, zh:"麻辣烫", py:"Málàtàng", en:"Spicy Hot Pot", img:"images/dish_8.jpg", bg:"#f0e8fb", price:18, cal:560, rating:4.7, tags:["spicy", "new"], ingr_en:["Pick your own", "Broth", "Noodles"], ingr_zh:["自选食材", "汤底", "粉丝"]},
+  {id:9, zh:"煎饼果子", py:"Jiānbing guǒzi", en:"Jianbing (savory crepe)", img:"images/dish_9.jpg", bg:"#fff0ea", price:7, cal:380, rating:4.5, tags:["new"], ingr_en:["Crepe", "Egg", "Crispy cracker", "Sauce"], ingr_zh:["面糊", "鸡蛋", "薄脆", "酱"]},
+  {id:10, zh:"糖醋里脊", py:"Tángcù lǐjǐ", en:"Sweet & Sour Pork", img:"images/dish_10.jpg", bg:"#fde8e8", price:14, cal:590, rating:4.4, tags:[], ingr_en:["Pork loin", "Vinegar", "Sugar", "Ketchup"], ingr_zh:["里脊肉", "醋", "糖", "番茄酱"]},
+  {id:11, zh:"素炒时蔬", py:"Sù chǎo shíshū", en:"Stir-fried Seasonal Veg", img:"images/dish_11.jpg", bg:"#e8f6ed", price:6, cal:150, rating:4.2, tags:["veg"], ingr_en:["Seasonal greens", "Garlic", "Oil", "Salt"], ingr_zh:["时令蔬菜", "蒜", "油", "盐"]},
+  {id:12, zh:"羊肉串", py:"Yángròu chuàn", en:"Lamb Skewers", img:"images/dish_12.jpg", bg:"#fde8e8", price:4, cal:120, rating:4.8, tags:["halal", "spicy", "new"], ingr_en:["Lamb", "Cumin", "Chili powder"], ingr_zh:["羊肉", "孜然", "辣椒粉"]},
+  {id:13, zh:"北京烤鸭饭", py:"Běijīng kǎoyā fàn", en:"Peking Duck Rice Bowl", img:"images/dish_13.jpg", bg:"#fbe6df", price:22, cal:680, rating:4.9, tags:["new"], ingr_en:["Peking duck", "Rice", "Scallion", "Hoisin"], ingr_zh:["北京鸭", "米饭", "葱", "甜面酱"]},
+  {id:14, zh:"素包子", py:"Sù bāozi", en:"Vegetable Steamed Bun", img:"images/dish_14.jpg", bg:"#e8f6ed", price:4, cal:190, rating:4.3, tags:["veg"], ingr_en:["Flour", "Cabbage", "Carrot", "Tofu"], ingr_zh:["面粉", "白菜", "胡萝卜", "豆腐"]},
+  {id:15, zh:"牛肉面", py:"Niúròu miàn", en:"Beef Noodle Soup", img:"images/dish_15.jpg", bg:"#fff3df", price:14, cal:520, rating:4.6, tags:[], ingr_en:["Noodles", "Beef", "Bok choy", "Broth"], ingr_zh:["面条", "牛肉", "青菜", "高汤"]},
+  {id:16, zh:"扬州炒饭", py:"Yángzhōu chǎofàn", en:"Yangzhou Fried Rice", img:"images/dish_16.jpg", bg:"#fbe6df", price:11, cal:560, rating:4.5, tags:[], ingr_en:["Rice", "Egg", "Shrimp", "Peas"], ingr_zh:["米饭", "鸡蛋", "虾仁", "豌豆"]},
+  {id:17, zh:"麻辣香锅", py:"Málà xiāngguō", en:"Mala Dry Pot", img:"images/dish_17.jpg", bg:"#fde8e8", price:20, cal:640, rating:4.7, tags:["spicy"], ingr_en:["Mixed veg", "Meat", "Chili", "Sichuan pepper"], ingr_zh:["综合蔬菜", "肉", "辣椒", "花椒"]},
+  {id:18, zh:"水煮鱼", py:"Shuǐzhǔ yú", en:"Boiled Fish in Chili Oil", img:"images/dish_18.jpg", bg:"#e8eefb", price:24, cal:520, rating:4.7, tags:["spicy"], ingr_en:["Fish fillet", "Chili oil", "Bean sprouts"], ingr_zh:["鱼片", "辣椒油", "豆芽"]},
+  {id:19, zh:"酸辣粉", py:"Suānlà fěn", en:"Hot & Sour Glass Noodles", img:"images/dish_19.jpg", bg:"#fff3df", price:9, cal:360, rating:4.5, tags:["spicy", "veg"], ingr_en:["Sweet-potato noodles", "Vinegar", "Chili", "Peanuts"], ingr_zh:["红薯粉", "醋", "辣椒", "花生"]},
+  {id:20, zh:"小笼包", py:"Xiǎolóngbāo", en:"Soup Dumplings", img:"images/dish_20.jpg", bg:"#fde8e8", price:10, cal:320, rating:4.8, tags:[], ingr_en:["Pork", "Flour", "Ginger", "Broth"], ingr_zh:["猪肉", "面粉", "姜", "汤汁"]},
+  {id:21, zh:"蛋炒饭", py:"Dàn chǎofàn", en:"Egg Fried Rice", img:"images/dish_21.jpg", bg:"#fbe6df", price:7, cal:420, rating:4.3, tags:["veg"], ingr_en:["Rice", "Egg", "Scallion", "Salt"], ingr_zh:["米饭", "鸡蛋", "葱", "盐"]},
+  {id:22, zh:"干煸四季豆", py:"Gānbiān sìjìdòu", en:"Dry-fried Green Beans", img:"images/dish_22.jpg", bg:"#e8f6ed", price:8, cal:220, rating:4.4, tags:["veg", "spicy"], ingr_en:["Green beans", "Garlic", "Chili", "Preserved veg"], ingr_zh:["四季豆", "蒜", "辣椒", "榨菜"]},
+  {id:23, zh:"回锅肉", py:"Huíguō ròu", en:"Twice-cooked Pork", img:"images/dish_23.jpg", bg:"#fde8e8", price:14, cal:600, rating:4.6, tags:["spicy"], ingr_en:["Pork belly", "Leek", "Doubanjiang"], ingr_zh:["五花肉", "蒜苗", "豆瓣酱"]},
+  {id:24, zh:"清蒸鲈鱼", py:"Qīngzhēng lúyú", en:"Steamed Sea Bass", img:"images/dish_24.jpg", bg:"#e8eefb", price:26, cal:300, rating:4.7, tags:[], ingr_en:["Sea bass", "Ginger", "Scallion", "Soy sauce"], ingr_zh:["鲈鱼", "姜", "葱", "酱油"]},
+  {id:25, zh:"凉皮", py:"Liángpí", en:"Cold Skin Noodles", img:"images/dish_25.jpg", bg:"#fff3df", price:8, cal:330, rating:4.5, tags:["veg", "spicy"], ingr_en:["Wheat noodles", "Cucumber", "Chili oil", "Vinegar"], ingr_zh:["面皮", "黄瓜", "辣椒油", "醋"]},
+  {id:26, zh:"葱油拌面", py:"Cōngyóu bànmiàn", en:"Scallion Oil Noodles", img:"images/dish_26.jpg", bg:"#fff3df", price:7, cal:410, rating:4.4, tags:["veg"], ingr_en:["Noodles", "Scallion", "Soy sauce", "Oil"], ingr_zh:["面条", "葱", "酱油", "油"]},
+  {id:27, zh:"红烧茄子", py:"Hóngshāo qiézi", en:"Braised Eggplant", img:"images/dish_27.jpg", bg:"#e8f6ed", price:8, cal:280, rating:4.5, tags:["veg"], ingr_en:["Eggplant", "Garlic", "Soy sauce", "Sugar"], ingr_zh:["茄子", "蒜", "酱油", "糖"]},
+  {id:28, zh:"家常豆腐", py:"Jiācháng dòufu", en:"Home-style Tofu", img:"images/dish_28.jpg", bg:"#e8f6ed", price:8, cal:300, rating:4.3, tags:["veg"], ingr_en:["Tofu", "Pepper", "Carrot", "Soy sauce"], ingr_zh:["豆腐", "青椒", "胡萝卜", "酱油"]},
+  {id:29, zh:"咖喱鸡饭", py:"Gālí jī fàn", en:"Curry Chicken Rice", img:"images/dish_29.jpg", bg:"#fbe6df", price:13, cal:580, rating:4.5, tags:[], ingr_en:["Chicken", "Curry", "Potato", "Rice"], ingr_zh:["鸡肉", "咖喱", "土豆", "米饭"]},
+  {id:30, zh:"孜然牛肉", py:"Zīrán niúròu", en:"Cumin Beef", img:"images/dish_30.jpg", bg:"#fde8e8", price:16, cal:520, rating:4.6, tags:["spicy"], ingr_en:["Beef", "Cumin", "Onion", "Chili"], ingr_zh:["牛肉", "孜然", "洋葱", "辣椒"]},
+  {id:31, zh:"白切鸡", py:"Báiqiē jī", en:"Poached Chicken", img:"images/dish_31.jpg", bg:"#fde8e8", price:14, cal:360, rating:4.4, tags:[], ingr_en:["Chicken", "Ginger", "Scallion", "Soy"], ingr_zh:["鸡肉", "姜", "葱", "酱油"]},
+  {id:32, zh:"紫菜蛋花汤", py:"Zǐcài dànhuā tāng", en:"Seaweed Egg Soup", img:"images/dish_32.jpg", bg:"#f0e8fb", price:4, cal:90, rating:4.2, tags:["veg"], ingr_en:["Seaweed", "Egg", "Scallion", "Salt"], ingr_zh:["紫菜", "鸡蛋", "葱", "盐"]},
+  {id:33, zh:"西湖牛肉羹", py:"Xīhú niúròu gēng", en:"Beef & Egg Thick Soup", img:"images/dish_33.jpg", bg:"#f0e8fb", price:9, cal:180, rating:4.4, tags:[], ingr_en:["Beef", "Egg white", "Coriander", "Starch"], ingr_zh:["牛肉", "蛋清", "香菜", "淀粉"]},
+  {id:34, zh:"担担面", py:"Dàndàn miàn", en:"Dandan Noodles", img:"images/dish_34.jpg", bg:"#fff3df", price:11, cal:520, rating:4.7, tags:["spicy"], ingr_en:["Noodles", "Minced pork", "Sesame", "Chili oil"], ingr_zh:["面条", "肉末", "芝麻", "辣椒油"]},
+  {id:35, zh:"糯米烧麦", py:"Nuòmǐ shāomài", en:"Sticky Rice Shumai", img:"images/dish_35.jpg", bg:"#fbe6df", price:6, cal:280, rating:4.4, tags:[], ingr_en:["Glutinous rice", "Pork", "Mushroom", "Wrapper"], ingr_zh:["糯米", "猪肉", "香菇", "面皮"]},
+  {id:36, zh:"韭菜盒子", py:"Jiǔcài hézi", en:"Chive Pockets", img:"images/dish_36.jpg", bg:"#e8f6ed", price:5, cal:260, rating:4.3, tags:["veg"], ingr_en:["Chives", "Egg", "Flour", "Vermicelli"], ingr_zh:["韭菜", "鸡蛋", "面粉", "粉丝"]},
+  {id:37, zh:"鸡腿饭", py:"Jītuǐ fàn", en:"Fried Chicken Leg Rice", img:"images/dish_37.jpg", bg:"#fbe6df", price:12, cal:620, rating:4.6, tags:[], ingr_en:["Chicken leg", "Rice", "Pickles", "Egg"], ingr_zh:["鸡腿", "米饭", "咸菜", "鸡蛋"]},
+  {id:38, zh:"麻辣鸡块", py:"Málà jīkuài", en:"Spicy Chicken Bites", img:"images/dish_38.jpg", bg:"#fde8e8", price:13, cal:480, rating:4.5, tags:["spicy"], ingr_en:["Chicken", "Chili", "Peanuts", "Sichuan pepper"], ingr_zh:["鸡肉", "辣椒", "花生", "花椒"]},
+  {id:39, zh:"上汤娃娃菜", py:"Shàngtāng wáwácài", en:"Baby Cabbage in Broth", img:"images/dish_39.jpg", bg:"#e8f6ed", price:9, cal:120, rating:4.4, tags:["veg"], ingr_en:["Baby cabbage", "Broth", "Goji", "Garlic"], ingr_zh:["娃娃菜", "高汤", "枸杞", "蒜"]},
+  {id:40, zh:"红豆沙", py:"Hóngdòu shā", en:"Red Bean Soup", img:"images/dish_40.jpg", bg:"#fdeef0", price:4, cal:200, rating:4.3, tags:["veg"], ingr_en:["Red beans", "Sugar", "Water"], ingr_zh:["红豆", "糖", "水"]},
+  {id:41, zh:"银耳莲子羹", py:"Yín'ěr liánzǐ gēng", en:"Snow Fungus & Lotus Soup", img:"images/dish_41.jpg", bg:"#fdeef0", price:5, cal:150, rating:4.5, tags:["veg"], ingr_en:["Snow fungus", "Lotus seeds", "Rock sugar"], ingr_zh:["银耳", "莲子", "冰糖"]},
+  {id:42, zh:"芒果西米露", py:"Mángguǒ xīmǐlù", en:"Mango Sago", img:"images/dish_42.jpg", bg:"#fdeef0", price:8, cal:240, rating:4.6, tags:["veg", "new"], ingr_en:["Mango", "Sago", "Coconut milk"], ingr_zh:["芒果", "西米", "椰浆"]},
+  {id:43, zh:"麻酱凉面", py:"Májiàng liángmiàn", en:"Sesame Cold Noodles", img:"images/dish_43.jpg", bg:"#fff3df", price:8, cal:430, rating:4.4, tags:["veg"], ingr_en:["Noodles", "Sesame paste", "Cucumber", "Garlic"], ingr_zh:["面条", "芝麻酱", "黄瓜", "蒜"]},
+  {id:44, zh:"酸菜鱼", py:"Suāncài yú", en:"Fish with Pickled Mustard", img:"images/dish_44.jpg", bg:"#e8eefb", price:23, cal:480, rating:4.7, tags:["spicy"], ingr_en:["Fish", "Pickled mustard", "Chili", "Egg white"], ingr_zh:["鱼", "酸菜", "辣椒", "蛋清"]},
+  {id:45, zh:"土豆炖牛肉", py:"Tǔdòu dùn niúròu", en:"Beef & Potato Stew", img:"images/dish_45.jpg", bg:"#fde8e8", price:16, cal:560, rating:4.6, tags:[], ingr_en:["Beef", "Potato", "Carrot", "Star anise"], ingr_zh:["牛肉", "土豆", "胡萝卜", "八角"]},
+  {id:46, zh:"香菇青菜", py:"Xiānggū qīngcài", en:"Bok Choy with Mushroom", img:"images/dish_46.jpg", bg:"#e8f6ed", price:7, cal:130, rating:4.3, tags:["veg"], ingr_en:["Bok choy", "Shiitake", "Garlic", "Oil"], ingr_zh:["青菜", "香菇", "蒜", "油"]},
+  {id:47, zh:"黑椒牛柳", py:"Hēijiāo niúliǔ", en:"Black Pepper Beef", img:"images/dish_47.jpg", bg:"#fde8e8", price:18, cal:540, rating:4.6, tags:[], ingr_en:["Beef", "Black pepper", "Onion", "Bell pepper"], ingr_zh:["牛肉", "黑椒", "洋葱", "彩椒"]},
+  {id:48, zh:"三鲜水饺", py:"Sānxiān shuǐjiǎo", en:"Three-Delight Dumplings", img:"images/dish_48.jpg", bg:"#fde8e8", price:10, cal:400, rating:4.7, tags:[], ingr_en:["Pork", "Shrimp", "Chives", "Wrapper"], ingr_zh:["猪肉", "虾仁", "韭菜", "饺子皮"]},
+  {id:49, zh:"皮蛋瘦肉粥", py:"Pídàn shòuròu zhōu", en:"Century Egg Congee", img:"images/dish_49.jpg", bg:"#fbe6df", price:6, cal:260, rating:4.4, tags:[], ingr_en:["Rice", "Century egg", "Pork", "Scallion"], ingr_zh:["米饭", "皮蛋", "瘦肉", "葱"]},
+  {id:50, zh:"冰糖雪梨", py:"Bīngtáng xuělí", en:"Rock Sugar Pear", img:"images/dish_50.jpg", bg:"#fdeef0", price:5, cal:130, rating:4.5, tags:["veg", "new"], ingr_en:["Pear", "Rock sugar", "Goji"], ingr_zh:["雪梨", "冰糖", "枸杞"]},
+  {id:51, zh:"小炒黄牛肉", py:"Xiǎochǎo huángniúròu", en:"Stir-fried Beef & Pepper", img:"images/dish_51.jpg", bg:"#fde8e8", price:17, cal:560, rating:4.6, tags:["spicy"], ingr_en:["Beef", "Chili", "Scallion", "Ginger"], ingr_zh:["黄牛肉", "小米椒", "葱", "姜"]},
+  {id:52, zh:"广式肠粉", py:"Guǎngshì chángfěn", en:"Rice Noodle Rolls", img:"images/dish_52.jpg", bg:"#fff0ea", price:9, cal:320, rating:4.5, tags:[], ingr_en:["Rice noodle", "Egg", "Shrimp", "Soy"], ingr_zh:["肠粉", "鸡蛋", "虾仁", "酱油"]}
+];
+
+const alloc = {"jiayuan": {"floors": [[[2, 16, 18, 48], [7, 9, 35, 44, 48], [2, 3, 28, 38], [14, 15, 33, 39], [13, 36, 42, 46]], [[1, 11, 15, 18, 27, 29, 38, 45], [6, 7, 10, 14, 18, 22, 52], [3, 7, 17, 23, 30, 39, 51], [6, 8, 19, 24, 25, 36, 40, 41]], [[3, 5, 6, 13, 15, 19, 43, 46], [7, 18, 25, 30, 41], [11, 14, 18, 23, 24, 43], [11, 35, 39, 41]], [[11, 18, 25, 30, 41], [3, 4, 15, 21, 26, 44, 50, 52]]]}, "nongyuan": {"floors": [[[5, 14, 21, 37, 46, 51], [9, 10, 16, 17, 26, 30, 42], [17, 24, 26, 28, 35, 38, 48, 49], [6, 9, 32, 33, 49], [8, 10, 11, 41], [5, 25, 30, 34, 39, 50, 52]], [[1, 8, 36, 44, 47, 50], [8, 18, 19, 22, 28, 42, 49, 50], [1, 17, 30, 33, 47], [7, 20, 33, 39, 41], [10, 11, 24, 35, 49], [1, 2, 8, 20, 21, 24, 32, 39], [4, 6, 16, 37, 47], [5, 9, 31, 35, 43, 49, 51], [11, 14, 17, 28, 34, 35, 39, 45], [20, 26, 42, 43, 46]]]}, "yannan": {"floors": [[[8, 15, 16, 29, 34, 52], [2, 22, 36, 38], [1, 5, 15, 38, 46], [3, 5, 15, 22], [16, 18, 33, 43], [9, 14, 31, 35, 37, 47, 48], [13, 27, 31, 51, 52], [7, 23, 28, 43], [4, 27, 30, 42, 44, 47, 50], [4, 22, 26, 47]]]}, "xuewu": {"floors": [[[13, 16, 29, 35], [12, 16, 18, 28, 30], [7, 29, 36, 52], [1, 6, 35, 42], [11, 14, 27, 31, 32], [1, 4, 11, 17, 25, 30, 50], [28, 36, 43, 45, 46, 47], [4, 10, 13, 14, 19, 35, 38], [4, 21, 38, 48], [4, 6, 11, 12, 33, 34, 52], [5, 16, 39, 44], [3, 8, 16, 37, 38, 39, 40], [27, 37, 38, 43], [14, 16, 17, 21, 43, 46, 51, 52], [5, 9, 20, 21, 30, 42, 43], [7, 30, 37, 40], [14, 17, 33, 35], [5, 16, 19, 23, 24]]]}, "chengfu": {"dishes": [1, 7, 9, 20, 29, 34, 35, 36, 40, 42, 43, 46, 49]}, "changchun": {"dishes": [7, 8, 10, 14, 17, 18, 19, 22, 33, 36, 39, 41, 44, 48]}, "zhongguanyuan": {"dishes": [1, 3, 4, 6, 9, 11, 17, 18, 22, 28, 29, 36, 41, 49, 52]}};
+
+dishes.forEach(d=>{ d.recs = Math.round(d.rating*22) + ((d.id*37)%45); d.added = d.tags.includes("new") ? ("2026-05-"+String(12+((d.id*7)%17)).padStart(2,"0")) : ("2026-0"+(1+(d.id%4))+"-"+String(8+((d.id*5)%20)).padStart(2,"0")); });
+
+const news = [
+  {id:"n1", emoji:"🍲", bg:"#fde8e8",
+   en_t:"New: Build-your-own Malatang at Xuewu", zh_t:"新品：学五食堂自选麻辣烫",
+   en_s:"Pick your ingredients, choose your spice level — now open at Canteen No.5, Stall 6.",
+   zh_s:"自选食材，自定辣度 — 学五食堂6号窗口现已开放。", date:"2026-05-28"},
+  {id:"n2", emoji:"🦆", bg:"#fbe6df",
+   en_t:"Peking Duck rice bowl launches at Chengfuyuan", zh_t:"成府园食堂推出北京烤鸭饭",
+   en_s:"Chengfuyuan now serves an authentic Peking duck rice bowl — only ¥22.",
+   zh_s:"成府园食堂现推出正宗北京烤鸭饭，仅需22元。", date:"2026-05-30"},
+  {id:"n3", emoji:"🍢", bg:"#fff3df",
+   en_t:"Halal Hall: lamb skewers are back", zh_t:"清真餐厅：羊肉串回归",
+   en_s:"By popular request, freshly grilled lamb skewers return to the Halal Hall this week.",
+   zh_s:"应同学要求，现烤羊肉串本周回归清真餐厅。", date:"2026-05-22"},
+];
+
+/* ── Lunch Buddy Data ── */
+const buddies = [
+  {id:1, name:"Alex Chen", zh:"陈明", avatar:"👨‍💻", avatarBg:"#e8eefb",
+   year:"MSc Year 2", dept:"Computer Science",
+   interests:["Startups","AI/ML","Basketball"],
+   expText:"Former ByteDance intern · Built a fintech app from scratch",
+   expTags:["Tech internship","Entrepreneurship"],
+   times:["12:00","12:30"], lang:["English","中文"]},
+  {id:2, name:"Sophie Martin", zh:"马素菲", avatar:"👩‍🎓", avatarBg:"#fbe9e9",
+   year:"PhD Year 1", dept:"Economics",
+   interests:["Research","Travel","Coffee"],
+   expText:"World Bank research assistant · Policy analysis in SE Asia",
+   expTags:["Research","NGO/Non-profit"],
+   times:["11:30","12:00"], lang:["English","Français"]},
+  {id:3, name:"Kai Yamamoto", zh:"山本凯", avatar:"🧑‍🔬", avatarBg:"#e8f6ed",
+   year:"MSc Year 1", dept:"Engineering",
+   interests:["AI/ML","Sports","Music"],
+   expText:"Toyota Research Institute internship · Robotics project lead",
+   expTags:["Tech internship","Research"],
+   times:["12:30","13:00"], lang:["English","日本語"]},
+  {id:4, name:"Emma Liu", zh:"刘雨桐", avatar:"👩‍⚖️", avatarBg:"#fff3df",
+   year:"LLM Year 1", dept:"Law",
+   interests:["Policy","Arts","Food"],
+   expText:"Ministry of Justice research position · Published on IP law",
+   expTags:["Research","Government"],
+   times:["12:00","12:30","13:00"], lang:["English","中文"]},
+  {id:5, name:"Miguel Santos", zh:"桑图斯", avatar:"👨‍💼", avatarBg:"#f1e8fb",
+   year:"MBA Year 2", dept:"Business",
+   interests:["Finance","Travel","Startups"],
+   expText:"McKinsey consultant · Co-founded a social enterprise in Brazil",
+   expTags:["Consulting","Entrepreneurship"],
+   times:["11:00","11:30"], lang:["English","Español"]},
+  {id:6, name:"Li Wei", zh:"李伟", avatar:"🧑‍🔭", avatarBg:"#e8f0fe",
+   year:"PhD Year 3", dept:"Physics",
+   interests:["Research","Music","Food"],
+   expText:"CERN summer student · Published in Nature Physics",
+   expTags:["Research"],
+   times:["13:00","13:30"], lang:["中文","English"]},
+  {id:7, name:"Amara Diallo", zh:"阿玛拉", avatar:"👩‍⚕️", avatarBg:"#fde8e8",
+   year:"MBBS Year 4", dept:"Medicine",
+   interests:["Policy","Sports","Travel"],
+   expText:"Médecins Sans Frontières volunteer · Global health research in West Africa",
+   expTags:["NGO/Non-profit","Research"],
+   times:["12:00","12:30"], lang:["English","Français","Español"]},
+  {id:8, name:"James Park", zh:"朴在民", avatar:"🧑‍🎨", avatarBg:"#fff0ea",
+   year:"MA Year 1", dept:"History",
+   interests:["Arts","Food","Research"],
+   expText:"Fulbright Scholar · Taught English in rural Yunnan for 2 years",
+   expTags:["Research","NGO/Non-profit"],
+   times:["11:30","12:00","12:30"], lang:["English","한국어","中文"]},
+];
+
+/* ── Filter option lists ── */
+const filterOpts = {
+  times:["11:00","11:30","12:00","12:30","13:00","13:30"],
+  depts:["Computer Science","Economics","Law","Medicine","Physics","Engineering","Business","History"],
+  interests:["Startups","AI/ML","Research","Sports","Music","Travel","Arts","Food","Finance","Policy"],
+  expTags:["Tech internship","Research","NGO/Non-profit","Entrepreneurship","Consulting","Government"],
+  lang:["English","中文","Français","Español","日本語","한국어"],
+};
+
+/* ── State ── */
+let state = {
+  lang:"en", tab:"home", filter:"all", canteen:null, floor:null, stall:null,
+  wishlist:new Set(), ratings:{}, pendingReviewStars:{},
+  buddyFilters:{times:[], depts:[], interests:[], expTags:[], lang:[]},
+  invitedBuddies: new Set(), buddyOpen:false, sort:"default", myPosts:[], agreed:[], postSeq:1,
+};
+const t = k => i18n[state.lang][k] || k;
+
+/* ── i18n ── */
+function setLang(l){
+  state.lang = l;
+  document.documentElement.lang = l==="zh"?"zh":"en";
+  document.getElementById("lang-en").classList.toggle("active", l==="en");
+  document.getElementById("lang-zh").classList.toggle("active", l==="zh");
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent = t(el.getAttribute("data-i18n")); });
+  renderAll();
+}
+
+/* ── Tabs ── */
+function setTab(tab){
+  state.tab = tab;
+  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active", b.dataset.tab===tab));
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-"+tab).classList.add("active");
+  document.getElementById("body").scrollTop = 0;
+  if(tab==="menu" && !state.canteen) state.filter="all";
+  renderAll();
+}
+
+/* ── Helpers ── */
+function crowdColor(c){ return c>=80?"var(--red)":c>=55?"var(--amber)":"var(--green)"; }
+
+/* ── HOME: canteen list ── */
+function renderCanteens(){
+  const el = document.getElementById("canteen-list");
+  el.innerHTML = canteens.map(c=>{
+    const col = crowdColor(c.crowd);
+    const name = state.lang==="zh"? c.zh : c.en;
+    const cn = state.lang==="zh"? "" : `<span class="cn">${c.zh}</span>`;
+    const status = c.open
+      ? `<span class="pill open">● ${t("open")} · ${c.hours}</span>`
+      : `<span class="pill closed">● ${t("closed")} · ${c.hours}</span>`;
+    const floors = c.floors ? `<span>🏢 ${c.floors.length} ${state.lang==="zh"?"层":"floors"}</span>` : "";
+    return `<div class="canteen" onclick="openCanteen('${c.id}')">
+      <div class="thumb" style="background:${c.bg}">${c.emoji}</div>
+      <div class="info">
+        <div class="name">${name} ${cn}</div>
+        <div class="meta">${status}</div>
+        <div class="meta"><span>🚶 <b>${c.walk}</b> ${t("min")}</span>${floors}</div>
+        <div class="crowd"><div class="bar"><i style="width:${c.crowd}%;background:${col}"></i></div>
+        <div class="lab"><span style="color:${col}">${c.crowd}% ${t("full")}</span></div></div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ── allocation helpers ── */
+function canteenAllDishes(cid){ const a=alloc[cid]; if(!a) return []; if(a.dishes) return a.dishes;
+  const set=new Set(); a.floors.forEach(fl=>fl.forEach(st=>st.forEach(id=>set.add(id)))); return [...set]; }
+function floorAllDishes(cid,f){ const a=alloc[cid]; if(!a||!a.floors) return [];
+  const set=new Set(); a.floors[f].forEach(st=>st.forEach(id=>set.add(id))); return [...set]; }
+function stallDishes(cid,f,s){ const a=alloc[cid]; return (a&&a.floors)?a.floors[f][s]:[]; }
+function dishById(id){ return dishes.find(d=>d.id===id); }
+function dishCanteens(id){ return canteens.filter(c=>canteenAllDishes(c.id).includes(id)); }
+
+/* ── MENU: canteen → floor → stall → dishes ── */
+function openCanteen(id){ state.canteen=id; state.floor=null; state.stall=null; state.filter="all"; setTab("menu"); }
+function clearCanteen(){ state.canteen=null; state.floor=null; state.stall=null; renderAll(); }
+function selectFloor(f){ state.floor=f; state.stall=null; document.getElementById("body").scrollTop=0; renderAll(); }
+function backToFloors(){ state.floor=null; state.stall=null; renderAll(); }
+function selectStall(s){ state.stall=s; document.getElementById("body").scrollTop=0; renderAll(); }
+function backToStalls(){ state.stall=null; renderAll(); }
+function goAllMenu(){ state.canteen=null; state.floor=null; state.stall=null; state.filter="all"; setTab("menu"); }
+
+function setFilter(f){ state.filter=f; renderAll(); }
+function tagLabel(tg){ return {veg:t("filterVeg"),halal:t("filterHalal"),spicy:t("filterSpicy"),new:t("filterNew")}[tg]||tg; }
+
+function dishCard(d, loc){
+  const saved = state.wishlist.has(d.id);
+  const tags = d.tags.map(tg=>`<span class="tag ${tg}">${tagLabel(tg)}</span>`).join(" ");
+  const where = loc || (state.lang==="zh"?"多个食堂":"Various canteens");
+  const revCount = (reviews[d.id]||[]).length;
+  return `<div class="dish" onclick="openDish(${d.id})">
+    <div class="pic" style="background:${d.bg}"><img src="${d.img}" alt="${d.en}" loading="lazy"></div>
+    <div class="d-body">
+      <span class="heart" onclick="event.stopPropagation();toggleWish(${d.id})">${saved?"❤️":"🤍"}</span>
+      <div class="d-name">${d.zh}</div><div class="d-py">${d.py}</div><div class="d-en">${d.en}</div>
+      <div class="d-meta">
+        <span class="price">¥${d.price}</span><span>🔥 ${d.cal} ${t("cal")}</span><span>⭐ ${d.rating}</span>
+        ${revCount>0?`<span>💬 ${revCount}</span>`:""}
+      </div>
+      <div class="d-meta">${tags} <span>📍 ${where}</span></div>
+    </div>
+  </div>`;
+}
+
+function navButtons(items){
+  return `<div class="navgrid">`+items.map(it=>`<button class="navbtn" onclick="${it.onclick}"><span class="nb-t">${it.label}</span><span class="nb-c">${it.count} ${state.lang==="zh"?"道菜":"dishes"}</span></button>`).join("")+`</div>`;
+}
+
+function setSort(v){ state.sort=v; renderAll(); }
+function sortDishes(arr){ const a=arr.slice(); const so=state.sort;
+  if(so==="recs") a.sort((x,y)=>y.recs-x.recs);
+  else if(so==="rating") a.sort((x,y)=>y.rating-x.rating);
+  else if(so==="new") a.sort((x,y)=>(y.added||"").localeCompare(x.added||""));
+  return a; }
+function sortBar(){ const Lzh=state.lang==="zh";
+  const o=[["default",Lzh?"默认":"Default"],["recs",Lzh?"推荐最多":"Most recommended"],["rating",Lzh?"评分最高":"Top rated"],["new",Lzh?"最新":"Newest"]];
+  return `<div class="sortbar"><span class="sl">${Lzh?"排序":"Sort"}</span><select onchange="setSort(this.value)">`+o.map(([v,l])=>`<option value="${v}"${state.sort===v?" selected":""}>${l}</option>`).join("")+`</select></div>`; }
+function dishListHTML(dishArr, loc){ return sortBar()+sortDishes(dishArr).map(d=>dishCard(d,(typeof loc==="function"?loc(d):loc))).join(""); }
+
+function renderBrowse(){
+  const head=document.getElementById("menu-head");
+  const chips=document.getElementById("filter-chips");
+  const list=document.getElementById("dish-list");
+  const Lzh = state.lang==="zh";
+  if(!state.canteen){
+    head.innerHTML=`<div class="section-title"><span>${t("allCanteens")}</span></div>
+      <div class="disclaimer" style="text-align:left;padding:0 2px 8px">${t("menuHint")}</div>`;
+    const fl=[["all","filterAll"],["veg","filterVeg"],["halal","filterHalal"],["spicy","filterSpicy"],["new","filterNew"]];
+    chips.innerHTML=fl.map(([k,lab])=>`<button class="chip ${state.filter===k?"active":""}" onclick="setFilter('${k}')">${t(lab)}</button>`).join("");
+    let arr=dishes.slice(); if(state.filter!=="all") arr=arr.filter(d=>d.tags.includes(state.filter));
+    list.innerHTML=dishListHTML(arr, d=>dishCanteens(d.id).slice(0,2).map(c=>Lzh?c.zh:c.en).join(", "));
+    return;
+  }
+  const c=canteens.find(x=>x.id===state.canteen);
+  chips.innerHTML="";
+  const cname=Lzh?c.zh:c.en;
+  const sub=`<span>🚶 ${c.walk} ${t("min")}</span><span style="color:#ffd9d9">● ${c.crowd}% ${t("full")}</span>`;
+  if(!c.floors){
+    head.innerHTML=`<div class="cn-head"><span class="back" onclick="clearCanteen()">${Lzh?"‹ 全部食堂":"‹ All canteens"}</span><h2>${cname}</h2><div class="sub">${sub}</div></div>`;
+    list.innerHTML=`<div class="section-title"><span>${Lzh?"全部菜品":"All dishes"}</span></div>`+dishListHTML(canteenAllDishes(c.id).map(dishById), cname);
+    return;
+  }
+  if(state.floor===null){
+    head.innerHTML=`<div class="cn-head"><span class="back" onclick="clearCanteen()">${Lzh?"‹ 全部食堂":"‹ All canteens"}</span><h2>${cname}</h2><div class="sub">${sub}<span>🏢 ${c.floors.length} ${Lzh?"层":"floors"}</span></div></div>`;
+    const items=c.floors.map((nst,i)=>({label:(Lzh?`${i+1}层`:`Floor ${i+1}`),count:floorAllDishes(c.id,i).length,onclick:`selectFloor(${i})`}));
+    list.innerHTML=`<div class="section-title"><span>${Lzh?"选择楼层":"Select a floor"}</span></div>`+navButtons(items)
+      +`<div class="section-title"><span>${Lzh?"本食堂全部菜品":"All dishes · "+cname}</span></div>`+dishListHTML(canteenAllDishes(c.id).map(dishById), cname);
+    return;
+  }
+  if(state.stall===null){
+    const fname=Lzh?`${state.floor+1}层`:`Floor ${state.floor+1}`;
+    head.innerHTML=`<div class="cn-head"><span class="back" onclick="backToFloors()">${Lzh?"‹ 楼层":"‹ Floors"}</span><h2>${cname} · ${fname}</h2><div class="sub"><span>${c.floors[state.floor]} ${Lzh?"个档口":"stalls"}</span></div></div>`;
+    const nst=c.floors[state.floor]; const items=[];
+    for(let si=0;si<nst;si++) items.push({label:(Lzh?`${si+1}号档口`:`Stall ${si+1}`),count:stallDishes(c.id,state.floor,si).length,onclick:`selectStall(${si})`});
+    list.innerHTML=`<div class="section-title"><span>${Lzh?"选择档口":"Select a stall"}</span></div>`+navButtons(items)
+      +`<div class="section-title"><span>${Lzh?"本层全部菜品":"All dishes · "+fname}</span></div>`+dishListHTML(floorAllDishes(c.id,state.floor).map(dishById), fname);
+    return;
+  }
+  const fname=Lzh?`${state.floor+1}层`:`Floor ${state.floor+1}`;
+  const sname=Lzh?`${state.stall+1}号档口`:`Stall ${state.stall+1}`;
+  head.innerHTML=`<div class="cn-head"><span class="back" onclick="backToStalls()">${Lzh?"‹ 档口":"‹ Stalls"}</span><h2>${cname} · ${fname} · ${sname}</h2></div>`;
+  const ids=stallDishes(c.id,state.floor,state.stall);
+  list.innerHTML=ids.length?dishListHTML(ids.map(dishById), sname):`<div class="empty"><div class="ic">🍽️</div><div class="t">—</div></div>`;
+}
+
+/* ── WISHLIST ── */
+function renderWishlist(){
+  const el = document.getElementById("wishlist-list");
+  const items = dishes.filter(d=>state.wishlist.has(d.id));
+  el.innerHTML = items.length ? items.map(d=>dishCard(d)).join("")
+    : `<div class="empty"><div class="ic">🤍</div><div class="t">${t("wishEmptyT")}</div><div>${t("wishEmptyS")}</div></div>`;
+}
+
+/* ── NEWS ── */
+function renderNews(){
+  const el = document.getElementById("news-list");
+  el.innerHTML = news.map(n=>{
+    const stars = [1,2,3,4,5].map(s=>`<span class="s ${(state.ratings[n.id]||0)>=s?"on":""}" onclick="rate('${n.id}',${s})">★</span>`).join("");
+    return `<div class="news">
+      <div class="banner" style="background:${n.bg}">${n.emoji}</div>
+      <div class="n-body">
+        <div class="n-title">${state.lang==="zh"?n.zh_t:n.en_t}</div>
+        <div class="n-sub">${state.lang==="zh"?n.zh_s:n.en_s}</div>
+        <div class="n-foot">
+          <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px">${t("rateAsk")}</div><div class="rate">${stars}</div></div>
+          <span class="n-date">${n.date}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+function rate(id,s){ state.ratings[id]=s; renderNews(); toast(t("thanksRate")); }
+
+/* ── REVIEWS ── */
+const reviews = {
+  1:[{name:"Alex W.", stars:5, text:"Best dish on campus! Perfectly balanced.", date:"2026-05-30"}],
+  4:[{name:"Maria L.", stars:5, text:"Melt-in-your-mouth tender. Chef 张师傅 is amazing!", date:"2026-05-29"}],
+};
+
+/* ── DISH SHEET ── */
+const CPIN={chengfu:[200,20],changchun:[46,90],nongyuan:[226,138],jiayuan:[170,178],xuewu:[108,160],yannan:[100,124],zhongguanyuan:[295,124]};
+function dishMapSVG(ids){
+  const Lzh=state.lang==="zh";
+  const pins=canteens.map(c=>{
+    const p=CPIN[c.id]; if(!p) return "";
+    const on=ids.includes(c.id);
+    const fill=on?"#94070a":"#cbb9b9";
+    const label=on?`<text x="${p[0]}" y="${p[1]+24}" text-anchor="middle" font-size="9" fill="#6e0507" font-weight="bold">${Lzh?c.zh.replace("食堂",""):c.en.split(" ")[0]}</text>`:"";
+    return `<g><circle cx="${p[0]}" cy="${p[1]}" r="${on?10:6}" fill="${fill}"/><polygon points="${p[0]-4},${p[1]+8} ${p[0]+4},${p[1]+8} ${p[0]},${p[1]+16}" fill="${fill}"/>${on?`<circle cx="${p[0]}" cy="${p[1]}" r="3.4" fill="#fff"/>`:""}${label}</g>`;
+  }).join("");
+  return `<svg viewBox="0 0 340 210" style="width:100%;height:100%;display:block">
+    <rect width="340" height="210" fill="#eaf1f6"/>
+    <path d="M18,8 L322,8 L322,202 L18,202Z" fill="#eeeae2" stroke="#d4c9b0" stroke-width="1"/>
+    <rect x="138" y="8" width="7" height="194" fill="#ccc4b2" opacity="0.55"/>
+    <rect x="18" y="118" width="304" height="6" fill="#ccc4b2" opacity="0.55"/>
+    <path d="M148,40 C168,30 210,34 226,58 C236,78 220,98 196,104 C172,110 150,98 144,76 C140,58 140,46 148,40Z" fill="#7bbcdc" opacity="0.8"/>
+    ${pins}
+  </svg>`;
+}
+function openDish(id){
+  const d = dishes.find(x=>x.id===id);
+  const Lzh = state.lang==="zh";
+  const saved = state.wishlist.has(d.id);
+  const ingr = (Lzh?d.ingr_zh:d.ingr_en).map(i=>`<span>${i}</span>`).join("");
+  let where, mapIds;
+  if(state.canteen && state.floor!==null && state.stall!==null){
+    const c=canteens.find(x=>x.id===state.canteen);
+    where = Lzh? `${c.zh} · ${state.floor+1}层 ${state.stall+1}号档口` : `${c.en} · Floor ${state.floor+1} · Stall ${state.stall+1}`;
+    mapIds=[state.canteen];
+  } else {
+    const cs=dishCanteens(d.id);
+    where = cs.length? cs.map(c=>Lzh?c.zh:c.en).slice(0,3).join(" · ") : (Lzh?"多个食堂":"Various canteens");
+    mapIds=cs.map(c=>c.id);
+  }
+  const tags = d.tags.map(tg=>`<span class="tag ${tg}">${tagLabel(tg)}</span>`).join(" ");
+  const ps = state.pendingReviewStars[id]||0;
+  const rStars = [1,2,3,4,5].map(sv=>`<span class="rs${ps>=sv?" on":""}" onclick="setReviewStar(${id},${sv})">★</span>`).join("");
+  const revList = (reviews[id]||[]);
+  const revHtml = revList.length ? revList.map(r=>`<div class="review-item">
+    <div class="ri-head"><span class="ri-name">${r.name}</span><span class="ri-stars">${"★".repeat(r.stars)}${"☆".repeat(5-r.stars)}</span></div>
+    <div class="ri-text">${r.text}</div><div class="ri-date">${r.date}</div></div>`).join("")
+    : `<div class="no-reviews">${t("noReviews")}</div>`;
+  document.getElementById("sheet").innerHTML = `
+    <div class="grab"></div>
+    <div class="hero" style="background:${d.bg}"><img src="${d.img}" alt="${d.en}"></div>
+    <div class="s-pad">
+      <div class="s-name">${d.zh} ${tags}</div>
+      <div class="s-py">${d.py}</div><div class="s-en">${d.en}</div>
+      <div class="s-row">
+        <div class="cell"><b style="color:var(--pku)">¥${d.price}</b><span>${t("price")}</span></div>
+        <div class="cell"><b>${d.cal}</b><span>${t("calories")} (${t("cal")})</span></div>
+        <div class="cell"><b>⭐ ${d.rating}</b><span>${t("rating")}</span></div>
+      </div>
+      <h4>${t("ingredients")}</h4><div class="ingr">${ingr}</div>
+      <h4>${t("location")}</h4><div class="loc">📍 ${where}</div>
+      <h4>${Lzh?"在地图上":"On the map"}</h4><div class="detail-map">${dishMapSVG(mapIds)}</div>
+    </div>
+    <button class="btn ${saved?"saved":""}" onclick="toggleWish(${d.id},true)">${saved?t("savedBtn"):t("saveBtn")}</button>
+    <div class="review-section">
+      <h4>${t("reviewTitle")}</h4>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px">${t("reviewStarPrompt")}</div>
+      <div class="review-stars" id="rs-${id}">${rStars}</div>
+      <textarea class="review-textarea" id="rt-${id}" rows="3" placeholder="${t("reviewPlaceholder")}"></textarea>
+      <button class="review-submit" onclick="submitReview(${id})">${t("reviewSubmit")}</button>
+      <div class="review-list">${revHtml}</div>
+    </div>`;
+  document.getElementById("overlay").classList.add("show");
+  document.getElementById("sheet").classList.add("show");
+}
+
+function setReviewStar(dishId, s){
+  state.pendingReviewStars[dishId]=s;
+  const c = document.getElementById("rs-"+dishId);
+  if(c) c.querySelectorAll(".rs").forEach((el,i)=>el.classList.toggle("on",i<s));
+}
+function submitReview(dishId){
+  const stars = state.pendingReviewStars[dishId]||0;
+  if(!stars){ toast(t("reviewNoStar")); return; }
+  const ta = document.getElementById("rt-"+dishId);
+  const text = ta ? ta.value.trim() : "";
+  if(!reviews[dishId]) reviews[dishId]=[];
+  reviews[dishId].unshift({name:state.lang==="zh"?"匿名同学":"Anonymous Student", stars, text:text||(state.lang==="zh"?"（无文字评价）":"(no comment)"), date:new Date().toISOString().slice(0,10)});
+  delete state.pendingReviewStars[dishId];
+  toast(t("reviewThanks"));
+  openDish(dishId);
+}
+
+function closeSheet(){
+  state.buddyOpen=false;
+  document.getElementById("overlay").classList.remove("show");
+  document.getElementById("sheet").classList.remove("show");
+}
+function toggleWish(id, fromSheet){
+  state.wishlist.has(id) ? (state.wishlist.delete(id), toast(t("removedToast"))) : (state.wishlist.add(id), toast(t("addedToast")));
+  renderAll();
+  if(fromSheet) openDish(id);
+}
+
+/* ── QR / TopUp ── */
+function showQR(){ document.getElementById("qr-modal").classList.add("show"); syncModalI18n(); }
+function closeQR(){ document.getElementById("qr-modal").classList.remove("show"); }
+function showTopUp(){ selectedTopUp=50; renderTopUpAmounts(); document.getElementById("topup-modal").classList.add("show"); syncModalI18n(); }
+function closeTopUp(){ document.getElementById("topup-modal").classList.remove("show"); }
+function syncModalI18n(){ document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent=t(el.getAttribute("data-i18n")); }); }
+const topUpAmounts=[20,50,100,200,300,500];
+let selectedTopUp=50;
+function renderTopUpAmounts(){ document.getElementById("tu-amounts").innerHTML=topUpAmounts.map(a=>`<button class="tu-amt-btn${a===selectedTopUp?" sel":""}" onclick="selectTopUp(${a})">¥${a}</button>`).join(""); }
+function selectTopUp(a){ selectedTopUp=a; renderTopUpAmounts(); }
+function doTopUp(){ closeTopUp(); toast(t("topUpDone").replace("{amt}",selectedTopUp)); }
+
+/* ── MAP ── */
+let mapS = {scale:1, x:0, y:0, dragging:false, sx:0, sy:0, lx:0, ly:0, pinchD:0};
+
+function initMap(){
+  const wrap = document.getElementById("map-wrap");
+  wrap.addEventListener("mousedown", e=>{ mapS.dragging=true; mapS.sx=e.clientX-mapS.lx; mapS.sy=e.clientY-mapS.ly; e.preventDefault(); });
+  document.addEventListener("mousemove", e=>{ if(!mapS.dragging)return; mapS.x=e.clientX-mapS.sx; mapS.y=e.clientY-mapS.sy; constrainMap(); applyMap(); });
+  document.addEventListener("mouseup", ()=>{ mapS.dragging=false; });
+  wrap.addEventListener("touchstart", e=>{
+    if(e.touches.length===1){ mapS.dragging=true; mapS.sx=e.touches[0].clientX-mapS.lx; mapS.sy=e.touches[0].clientY-mapS.ly; }
+    else if(e.touches.length===2){ mapS.dragging=false; mapS.pinchD=pinchDist(e); }
+    e.preventDefault();
+  },{passive:false});
+  wrap.addEventListener("touchmove", e=>{
+    if(e.touches.length===1&&mapS.dragging){ mapS.x=e.touches[0].clientX-mapS.sx; mapS.y=e.touches[0].clientY-mapS.sy; constrainMap(); applyMap(); }
+    else if(e.touches.length===2){ const d=pinchDist(e); mapS.scale=Math.min(3,Math.max(1,mapS.scale+(d-mapS.pinchD)/180)); mapS.pinchD=d; constrainMap(); applyMap(); }
+    e.preventDefault();
+  },{passive:false});
+  wrap.addEventListener("touchend",()=>{ mapS.dragging=false; });
+}
+function pinchDist(e){ const dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY; return Math.sqrt(dx*dx+dy*dy); }
+function zoomMap(delta){ mapS.scale=Math.min(3,Math.max(1,mapS.scale+delta)); constrainMap(); applyMap(); }
+function constrainMap(){
+  const wrap=document.getElementById("map-wrap");
+  const maxX=wrap.offsetWidth*(mapS.scale-1)/2, maxY=wrap.offsetHeight*(mapS.scale-1)/2;
+  mapS.x=Math.min(maxX,Math.max(-maxX,mapS.x)); mapS.y=Math.min(maxY,Math.max(-maxY,mapS.y));
+  mapS.lx=mapS.x; mapS.ly=mapS.y;
+}
+function applyMap(){ document.getElementById("map-inner").style.transform=`translate(${mapS.x}px,${mapS.y}px) scale(${mapS.scale})`; }
+
+/* map pin tooltip */
+const mapCanteenData = {
+  chengfu:   {en:"Chengfuyuan Canteen", zh:"成府园食堂", open:true,  walk:12},
+  changchun: {en:"Changchunyuan Canteen",zh:"畅春园食堂",open:true,  walk:15},
+  nongyuan:  {en:"Nongyuan Canteen",    zh:"农园食堂",   open:true,  walk:6},
+  jiayuan:   {en:"Jiayuan Canteen",     zh:"家园食堂",   open:true,  walk:3},
+  xuewu:     {en:"Xuewu Canteen",       zh:"学五食堂",   open:true,  walk:5},
+  yannan:    {en:"Yannan Canteen",       zh:"燕南食堂",   open:true,  walk:8},
+  zhongguanyuan:{en:"Zhongguanyuan",    zh:"中关园食堂", open:false, walk:18},
+};
+let activeMapPin = null;
+
+function showMapPin(id){
+  activeMapPin = id;
+  const d = mapCanteenData[id];
+  const name = state.lang==="zh" ? d.zh : d.en;
+  const status = d.open ? `🟢 ${t("open")}` : `🔴 ${t("closed")}`;
+  document.getElementById("mib-name").textContent = name;
+  document.getElementById("mib-meta").textContent = `${status} · 🚶 ${d.walk} ${t("min")}`;
+  const bar = document.getElementById("map-info-bar");
+  bar.classList.add("show");
+  const btn = document.getElementById("mib-btn");
+  btn.onclick = () => { clearMapPin(); openCanteen(id); };
+  // highlight pin
+  document.querySelectorAll(".map-canteen-pin circle").forEach(el=>el.setAttribute("fill","#94070a"));
+  const pin = document.getElementById("pin-"+id);
+  if(pin) pin.querySelector("circle").setAttribute("fill","#6e0507");
+}
+function clearMapPin(){
+  activeMapPin = null;
+  document.getElementById("map-info-bar").classList.remove("show");
+  document.querySelectorAll(".map-canteen-pin circle").forEach(el=>el.setAttribute("fill","#94070a"));
+}
+
+/* ── LUNCH BUDDY ── */
+function openBuddyFinder(){ state.buddyOpen=true; state.buddyFilters={times:[],depts:[],interests:[],expTags:[],lang:[]}; renderBuddySheet();
+  document.getElementById("overlay").classList.add("show"); document.getElementById("sheet").classList.add("show"); }
+
+function toggleBuddyFilter(cat, val){ const arr=state.buddyFilters[cat]; const i=arr.indexOf(val); i>=0?arr.splice(i,1):arr.push(val); renderBuddySheet(); }
+
+function matchesBuddy(b){
+  const f=state.buddyFilters;
+  if(f.times.length && !f.times.some(ti=>b.times.includes(ti))) return false;
+  if(f.depts.length && !f.depts.includes(b.dept)) return false;
+  if(f.interests.length && !f.interests.some(i=>b.interests.includes(i))) return false;
+  if(f.lang.length && !f.lang.some(l=>b.lang.includes(l))) return false;
+  return true;
+}
+
+function chipRow(cat, opts, labelKey){
+  const active=state.buddyFilters[cat];
+  const chips=opts.map(o=>`<button class="buddy-chip${active.includes(o)?" on":""}" onclick="toggleBuddyFilter('${cat}','${o}')">${o}</button>`).join("");
+  return `<div class="buddy-filter-group"><div class="buddy-filter-label">${t(labelKey)}</div><div class="buddy-chips">${chips}</div></div>`;
+}
+
+function renderBuddySheet(){
+  const Lzh=state.lang==="zh";
+  const matched=buddies.filter(matchesBuddy);
+  const countStr=Lzh?`${matched.length} 位同学空闲`:`${matched.length} student${matched.length===1?"":"s"} available`;
+  const cards=matched.length?matched.map(b=>{
+    const invited=state.invitedBuddies.has(b.id);
+    const timePills=b.times.map(ti=>`<span class="buddy-time-chip">${ti}</span>`).join("");
+    const intTags=b.interests.map(i=>`<span class="buddy-tag">${i}</span>`).join("");
+    const langTags=b.lang.map(l=>`<span class="buddy-lang-tag">${l}</span>`).join("");
+    return `<div class="buddy-card">
+      <div class="buddy-card-top">
+        <div class="buddy-avatar" style="background:${b.avatarBg}">${b.avatar}</div>
+        <div class="buddy-info">
+          <div class="buddy-name">${b.name}${b.zh&&!Lzh?`<span style="font-size:11px;color:var(--muted);font-weight:600;margin-left:6px">${b.zh}</span>`:""}</div>
+          <div class="buddy-meta">${b.year} · ${b.dept}</div>
+          <div class="buddy-times">${timePills}</div>
+        </div>
+      </div>
+      <div class="buddy-tags-row">${intTags}${langTags}</div>
+      <button class="buddy-invite-btn${invited?" saved":""}" onclick="inviteBuddy(${b.id})" ${invited?"disabled":""}>${invited?(Lzh?"已约 ✓":"Lunch set ✓"):(Lzh?"邀请一起吃饭":"Invite to lunch")}</button>
+    </div>`;
+  }).join(""):`<div class="buddy-empty"><div class="be-ic">🔍</div><div>${Lzh?"暂无匹配 — 调整筛选":"No matches — adjust filters"}</div></div>`;
+  document.getElementById("sheet").innerHTML=`
+    <div class="grab"></div>
+    <div class="buddy-sheet-inner">
+      <h2>${Lzh?"寻找饭搭子 🍜":"Find a Lunch Buddy 🍜"}</h2>
+      <div class="bs-sub">${Lzh?"和北大同学一起吃饭，认识新朋友。":"Meet a fellow Beida student over a meal."}</div>
+      <button class="lb-postlink" onclick="openPostForm()">＋ ${Lzh?"发布我自己的约饭":"Post your own availability"}</button>
+      ${chipRow("times", filterOpts.times, "filterTime")}
+      ${chipRow("depts", filterOpts.depts, "filterDept")}
+      ${chipRow("interests", filterOpts.interests, "filterInterests")}
+      ${chipRow("lang", filterOpts.lang, "filterLang")}
+      <div class="buddy-divider"></div>
+      <div class="buddy-count">${countStr}</div>
+      <div class="buddy-list">${cards}</div>
+    </div>`;
+}
+
+function inviteBuddy(id){
+  const b=buddies.find(x=>x.id===id); if(!b) return;
+  if(!state.invitedBuddies.has(id)){
+    state.invitedBuddies.add(id);
+    state.agreed.push({id:b.id, name:b.name, time:(b.times&&b.times[0])||"12:00", dept:b.dept});
+  }
+  toast((state.lang==="zh"?"已和 ":"Lunch set with ")+b.name+(state.lang==="zh"?" 约好午餐！🍜":"! 🍜"));
+  renderBuddySheet(); renderBuddyHome();
+}
+
+/* post your own availability */
+function openPostForm(){
+  const Lzh=state.lang==="zh";
+  const times=["11:00","11:30","12:00","12:30","13:00","13:30"];
+  const tOpts=times.map(x=>`<option value="${x}">${x}</option>`).join("");
+  const cOpts=canteens.map(c=>`<option value="${c.id}">${Lzh?c.zh:c.en}</option>`).join("");
+  document.getElementById("sheet").innerHTML=`
+    <div class="grab"></div>
+    <div class="buddy-sheet-inner">
+      <h2>${Lzh?"发布约饭":"Post your availability"}</h2>
+      <div class="bs-sub">${Lzh?"让其他同学找到你，一起吃饭、认识新朋友。":"Let other students find you for lunch and meet someone new."}</div>
+      <div class="pf-field"><label>${Lzh?"时间":"Time"}</label><select id="pf-time">${tOpts}</select></div>
+      <div class="pf-field"><label>${Lzh?"食堂":"Canteen"}</label><select id="pf-canteen">${cOpts}</select></div>
+      <div class="pf-field"><label>${Lzh?"留言（可选）":"Note (optional)"}</label><textarea id="pf-note" rows="2" placeholder="${Lzh?"例如：想认识新朋友，聊什么都行～":"e.g. Keen to meet new people — anyone welcome!"}"></textarea></div>
+      <button class="review-submit" onclick="submitPost()">${Lzh?"发布":"Post availability"}</button>
+    </div>`;
+  document.getElementById("overlay").classList.add("show"); document.getElementById("sheet").classList.add("show");
+}
+function submitPost(){
+  const time=document.getElementById("pf-time").value;
+  const canteen=document.getElementById("pf-canteen").value;
+  const note=(document.getElementById("pf-note").value||"").trim();
+  state.myPosts.push({id:state.postSeq++, time, canteen, note});
+  closeSheet(); renderBuddyHome(); toast(state.lang==="zh"?"已发布约饭！🍜":"Availability posted! 🍜");
+}
+function cancelPost(id){ state.myPosts=state.myPosts.filter(p=>p.id!==id); renderBuddyHome(); toast(state.lang==="zh"?"已取消":"Cancelled"); }
+function cancelAgreed(i){ const a=state.agreed[i]; state.agreed.splice(i,1); if(a) state.invitedBuddies.delete(a.id); renderBuddyHome(); if(state.buddyOpen) renderBuddySheet(); toast(state.lang==="zh"?"已取消午餐":"Lunch cancelled"); }
+function messageBuddy(name){
+  const Lzh=state.lang==="zh";
+  document.getElementById("sheet").innerHTML=`
+    <div class="grab"></div>
+    <div class="buddy-sheet-inner">
+      <h2>${(Lzh?"发消息给 ":"Message ")+name}</h2>
+      <div class="bs-sub">${Lzh?"约个具体地点和时间吧。":"Agree on a spot and time."}</div>
+      <div class="msg-quick">
+        <button onclick="quickMsg(this)">${Lzh?"我到啦，你在哪？":"I'm here — where are you?"}</button>
+        <button onclick="quickMsg(this)">${Lzh?"几点见？":"What time works?"}</button>
+        <button onclick="quickMsg(this)">${Lzh?"门口见！":"See you at the entrance!"}</button>
+      </div>
+      <textarea id="msg-text" class="review-textarea" rows="3" placeholder="${Lzh?"输入消息…":"Type a message…"}"></textarea>
+      <button class="review-submit" onclick="sendMsg()">${Lzh?"发送":"Send"}</button>
+    </div>`;
+  document.getElementById("overlay").classList.add("show"); document.getElementById("sheet").classList.add("show");
+}
+function quickMsg(b){ const ta=document.getElementById("msg-text"); if(ta) ta.value=b.textContent; }
+function sendMsg(){ closeSheet(); toast(state.lang==="zh"?"消息已发送 ✉️":"Message sent ✉️"); }
+
+function canteenZh(id){ const c=canteens.find(x=>x.id===id); return c?c.zh:id; }
+function canteenEn(id){ const c=canteens.find(x=>x.id===id); return c?c.en:id; }
+function renderBuddyHome(){
+  const Lzh=state.lang==="zh";
+  const sub=document.getElementById("lb-sub"); if(sub) sub.textContent=Lzh?"和北大同学一起吃饭，认识新朋友。":"Connect with your fellow Beida students over a meal — a low-key way to meet new people.";
+  const bf=document.getElementById("lb-find"); if(bf) bf.textContent=Lzh?"寻找饭搭子":"Find a lunch buddy";
+  const bp=document.getElementById("lb-post"); if(bp) bp.textContent=Lzh?"发布我的时间":"Post your availability";
+  const box=document.getElementById("buddy-home"); if(!box) return;
+  let html="";
+  html+=`<div class="lb-section"><div class="lb-sec-t">${Lzh?"我发布的约饭":"Your posted availability"}</div>`;
+  html+= state.myPosts.length ? state.myPosts.map(p=>`<div class="lb-row"><div class="lb-row-main"><div class="lb-when">🕒 ${p.time} · ${Lzh?canteenZh(p.canteen):canteenEn(p.canteen)}</div>${p.note?`<div class="lb-note">${p.note}</div>`:""}</div><button class="lb-x" onclick="cancelPost(${p.id})">${Lzh?"取消":"Cancel"}</button></div>`).join("")
+    : `<div class="lb-empty">${Lzh?"还没有发布。点击“发布我的时间”。":"None yet — tap “Post your availability”."}</div>`;
+  html+=`</div>`;
+  html+=`<div class="lb-section"><div class="lb-sec-t">${Lzh?"已约定的午餐":"Your agreed lunches"}</div>`;
+  html+= state.agreed.length ? state.agreed.map((a,i)=>`<div class="lb-row"><div class="lb-row-main"><div class="lb-when">🍜 ${a.name} · ${a.time}</div><div class="lb-note">${a.dept||""}</div></div><div class="lb-row-btns"><button class="lb-msg" onclick="messageBuddy('${a.name}')">${Lzh?"发消息":"Message"}</button><button class="lb-x" onclick="cancelAgreed(${i})">${Lzh?"取消":"Cancel"}</button></div></div>`).join("")
+    : `<div class="lb-empty">${Lzh?"还没有约定。去“寻找饭搭子”。":"None yet — find someone in “Find a lunch buddy”."}</div>`;
+  html+=`</div>`;
+  box.innerHTML=html;
+}
+
+/* ── Toast ── */
+let toastTimer;
+function toast(msg){
+  const el = document.getElementById("toast");
+  el.textContent=msg; el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove("show"), 1800);
+}
+
+/* ── Render all ── */
+function renderAll(){
+  renderCanteens();
+  renderBrowse();
+  renderWishlist(); renderNews(); renderBuddyHome();
+}
+
+/* ── Init ── */
+setLang("en");
+initMap();
+</script>
+</body>
+</html>
