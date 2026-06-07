@@ -272,6 +272,27 @@
   .sortbar .sl{font-size:12px;font-weight:700;color:var(--muted)}
   .sortbar select{border:1.5px solid var(--line);border-radius:10px;padding:7px 11px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink);outline:none;flex:1}
   .detail-map{width:100%;aspect-ratio:34/21;border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-top:4px;background:#eaf1f6}
+
+  /* v5: pronounce button + chat */
+  .say{display:inline-flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--line);
+    border-radius:50%;width:22px;height:22px;font-size:12px;line-height:1;cursor:pointer;padding:0;vertical-align:middle;margin-left:3px}
+  .say:active{transform:scale(.9)}
+  .say-lg{width:30px;height:30px;font-size:16px;border-color:#f0cfcf}
+  .chat-head{display:flex;align-items:center;gap:10px;padding:6px 20px 8px}
+  .chat-head .back{font-size:13px;font-weight:700;color:var(--pku);cursor:pointer;flex:0 0 auto}
+  .chat-head h2{font-size:18px;margin:0}
+  .chat-body{max-height:42vh;overflow-y:auto;padding:10px 16px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+  .chat-row{display:flex}
+  .chat-row.me{justify-content:flex-end}
+  .bubble{max-width:76%;padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.4}
+  .bubble.them{background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
+  .bubble.me{background:var(--pku);color:#fff;border-bottom-right-radius:4px}
+  .bubble .bt{display:block;font-size:9px;opacity:.6;margin-top:3px;text-align:right}
+  .chat-quick{display:flex;flex-wrap:wrap;gap:6px;padding:9px 16px 0}
+  .chat-quick button{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:6px 11px;font-size:12px;cursor:pointer;color:var(--ink)}
+  .chat-input-row{display:flex;gap:8px;padding:10px 16px 20px;align-items:flex-end}
+  .chat-input-row textarea{flex:1;border:1.5px solid var(--line);border-radius:16px;padding:9px 12px;font-size:14px;font-family:inherit;resize:none;outline:none;max-height:80px}
+  .chat-send{background:var(--pku);color:#fff;border:0;border-radius:16px;padding:10px 16px;font-size:14px;font-weight:800;cursor:pointer;flex:0 0 auto}
 </style>
 </head>
 <body>
@@ -809,7 +830,7 @@ let state = {
   lang:"en", tab:"home", filter:"all", canteen:null, floor:null, stall:null,
   wishlist:new Set(), ratings:{}, pendingReviewStars:{},
   buddyFilters:{times:[], depts:[], interests:[], expTags:[], lang:[]},
-  invitedBuddies: new Set(), buddyOpen:false, sort:"default", myPosts:[], agreed:[], postSeq:1,
+  invitedBuddies: new Set(), buddyOpen:false, sort:"default", myPosts:[], agreed:[], postSeq:1, chats:{}, chatReplied:{}, currentChat:null,
 };
 const t = k => i18n[state.lang][k] || k;
 
@@ -888,10 +909,10 @@ function dishCard(d, loc){
   const where = loc || (state.lang==="zh"?"多个食堂":"Various canteens");
   const revCount = (reviews[d.id]||[]).length;
   return `<div class="dish" onclick="openDish(${d.id})">
-    <div class="pic" style="background:${d.bg}"><img src="${d.img}" alt="${d.en}" loading="lazy"></div>
+    <div class="pic" style="background:${d.bg}"><img src="${d.img.replace("images/","images/thumb/")}" alt="${d.en}" loading="lazy"></div>
     <div class="d-body">
       <span class="heart" onclick="event.stopPropagation();toggleWish(${d.id})">${saved?"❤️":"🤍"}</span>
-      <div class="d-name">${d.zh}</div><div class="d-py">${d.py}</div><div class="d-en">${d.en}</div>
+      <div class="d-name">${d.zh} <button class="say" onclick="event.stopPropagation();speak('${d.zh}')" aria-label="pronounce">🔊</button></div><div class="d-py">${d.py}</div><div class="d-en">${d.en}</div>
       <div class="d-meta">
         <span class="price">¥${d.price}</span><span>🔥 ${d.cal} ${t("cal")}</span><span>⭐ ${d.rating}</span>
         ${revCount>0?`<span>💬 ${revCount}</span>`:""}
@@ -1043,7 +1064,7 @@ function openDish(id){
     <div class="grab"></div>
     <div class="hero" style="background:${d.bg}"><img src="${d.img}" alt="${d.en}"></div>
     <div class="s-pad">
-      <div class="s-name">${d.zh} ${tags}</div>
+      <div class="s-name">${d.zh} <button class="say say-lg" onclick="speak('${d.zh}')" aria-label="pronounce">🔊</button> ${tags}</div>
       <div class="s-py">${d.py}</div><div class="s-en">${d.en}</div>
       <div class="s-row">
         <div class="cell"><b style="color:var(--pku)">¥${d.price}</b><span>${t("price")}</span></div>
@@ -1235,6 +1256,7 @@ function inviteBuddy(id){
   if(!state.invitedBuddies.has(id)){
     state.invitedBuddies.add(id);
     state.agreed.push({id:b.id, name:b.name, time:(b.times&&b.times[0])||"12:00", dept:b.dept});
+    if(!state.chats[b.id]) state.chats[b.id]=[{from:"them", text:(state.lang==="zh"?"你好！期待一起吃饭 🍜":"Hi! Looking forward to our lunch 🍜"), time:nowHM()}];
   }
   toast((state.lang==="zh"?"已和 ":"Lunch set with ")+b.name+(state.lang==="zh"?" 约好午餐！🍜":"! 🍜"));
   renderBuddySheet(); renderBuddyHome();
@@ -1266,26 +1288,47 @@ function submitPost(){
   closeSheet(); renderBuddyHome(); toast(state.lang==="zh"?"已发布约饭！🍜":"Availability posted! 🍜");
 }
 function cancelPost(id){ state.myPosts=state.myPosts.filter(p=>p.id!==id); renderBuddyHome(); toast(state.lang==="zh"?"已取消":"Cancelled"); }
-function cancelAgreed(i){ const a=state.agreed[i]; state.agreed.splice(i,1); if(a) state.invitedBuddies.delete(a.id); renderBuddyHome(); if(state.buddyOpen) renderBuddySheet(); toast(state.lang==="zh"?"已取消午餐":"Lunch cancelled"); }
-function messageBuddy(name){
-  const Lzh=state.lang==="zh";
+function cancelAgreed(i){ const a=state.agreed[i]; state.agreed.splice(i,1); if(a){ state.invitedBuddies.delete(a.id); delete state.chats[a.id]; delete state.chatReplied[a.id]; } renderBuddyHome(); if(state.buddyOpen) renderBuddySheet(); toast(state.lang==="zh"?"已取消午餐":"Lunch cancelled"); }
+function nowHM(){ const d=new Date(); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+
+function speak(zh){
+  try{
+    if(!("speechSynthesis" in window)){ toast(state.lang==="zh"?"此设备不支持朗读":"Speech not supported on this device"); return; }
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(zh); u.lang="zh-CN"; u.rate=0.9;
+    const vs=window.speechSynthesis.getVoices()||[];
+    const v=vs.find(v=>/zh|chinese|中文|普通话/i.test((v.lang||"")+(v.name||"")));
+    if(v) u.voice=v;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+function chatName(id){ const a=state.agreed.find(x=>x.id===id); if(a) return a.name; const b=buddies.find(x=>x.id===id); return b?b.name:""; }
+function openChat(id){ state.currentChat=id; renderChat(); document.getElementById("overlay").classList.add("show"); document.getElementById("sheet").classList.add("show"); }
+function renderChat(){
+  const Lzh=state.lang==="zh"; const id=state.currentChat; const name=chatName(id);
+  const msgs=state.chats[id]||[];
+  const bubbles= msgs.length ? msgs.map(m=>`<div class="chat-row ${m.from}"><div class="bubble ${m.from}">${m.text}<span class="bt">${m.time}</span></div></div>`).join("")
+    : `<div class="lb-empty" style="text-align:center">${Lzh?"还没有消息":"No messages yet"}</div>`;
+  const quicks=(Lzh?["几点见？","门口见！","我到啦"]:["What time works?","See you at the entrance!","I'm here"]);
   document.getElementById("sheet").innerHTML=`
     <div class="grab"></div>
-    <div class="buddy-sheet-inner">
-      <h2>${(Lzh?"发消息给 ":"Message ")+name}</h2>
-      <div class="bs-sub">${Lzh?"约个具体地点和时间吧。":"Agree on a spot and time."}</div>
-      <div class="msg-quick">
-        <button onclick="quickMsg(this)">${Lzh?"我到啦，你在哪？":"I'm here — where are you?"}</button>
-        <button onclick="quickMsg(this)">${Lzh?"几点见？":"What time works?"}</button>
-        <button onclick="quickMsg(this)">${Lzh?"门口见！":"See you at the entrance!"}</button>
-      </div>
-      <textarea id="msg-text" class="review-textarea" rows="3" placeholder="${Lzh?"输入消息…":"Type a message…"}"></textarea>
-      <button class="review-submit" onclick="sendMsg()">${Lzh?"发送":"Send"}</button>
-    </div>`;
-  document.getElementById("overlay").classList.add("show"); document.getElementById("sheet").classList.add("show");
+    <div class="chat-head"><span class="back" onclick="closeSheet()">${Lzh?"‹ 返回":"‹ Back"}</span><h2>${(Lzh?"与 "+name+" 聊天":"Chat with "+name)}</h2></div>
+    <div class="chat-body" id="chat-body">${bubbles}</div>
+    <div class="chat-quick">${quicks.map(q=>`<button onclick="chatQuick(this)">${q}</button>`).join("")}</div>
+    <div class="chat-input-row"><textarea id="chat-input" rows="1" placeholder="${Lzh?"输入消息…":"Type a message…"}"></textarea><button class="chat-send" onclick="sendChat()">${Lzh?"发送":"Send"}</button></div>`;
+  const cb=document.getElementById("chat-body"); if(cb) cb.scrollTop=cb.scrollHeight;
 }
-function quickMsg(b){ const ta=document.getElementById("msg-text"); if(ta) ta.value=b.textContent; }
-function sendMsg(){ closeSheet(); toast(state.lang==="zh"?"消息已发送 ✉️":"Message sent ✉️"); }
+function chatQuick(b){ const ta=document.getElementById("chat-input"); if(ta){ ta.value=b.textContent; ta.focus(); } }
+function sendChat(){
+  const id=state.currentChat; const ta=document.getElementById("chat-input"); const txt=(ta?ta.value:"").trim(); if(!txt) return;
+  if(!state.chats[id]) state.chats[id]=[];
+  state.chats[id].push({from:"me", text:txt, time:nowHM()});
+  if(!state.chatReplied[id]){ state.chatReplied[id]=true; const Lzh=state.lang==="zh";
+    const reps=Lzh?["好呀，门口见！😄","听起来不错，等你～"]:["Sounds good, see you there! 😄","Great — see you soon!"];
+    state.chats[id].push({from:"them", text:reps[id%reps.length], time:nowHM()}); }
+  renderChat();
+}
 
 function canteenZh(id){ const c=canteens.find(x=>x.id===id); return c?c.zh:id; }
 function canteenEn(id){ const c=canteens.find(x=>x.id===id); return c?c.en:id; }
@@ -1301,7 +1344,7 @@ function renderBuddyHome(){
     : `<div class="lb-empty">${Lzh?"还没有发布。点击“发布我的时间”。":"None yet — tap “Post your availability”."}</div>`;
   html+=`</div>`;
   html+=`<div class="lb-section"><div class="lb-sec-t">${Lzh?"已约定的午餐":"Your agreed lunches"}</div>`;
-  html+= state.agreed.length ? state.agreed.map((a,i)=>`<div class="lb-row"><div class="lb-row-main"><div class="lb-when">🍜 ${a.name} · ${a.time}</div><div class="lb-note">${a.dept||""}</div></div><div class="lb-row-btns"><button class="lb-msg" onclick="messageBuddy('${a.name}')">${Lzh?"发消息":"Message"}</button><button class="lb-x" onclick="cancelAgreed(${i})">${Lzh?"取消":"Cancel"}</button></div></div>`).join("")
+  html+= state.agreed.length ? state.agreed.map((a,i)=>`<div class="lb-row"><div class="lb-row-main"><div class="lb-when">🍜 ${a.name} · ${a.time}</div><div class="lb-note">${a.dept||""}</div></div><div class="lb-row-btns"><button class="lb-msg" onclick="openChat(${a.id})">${Lzh?"聊天":"Chat"}</button><button class="lb-x" onclick="cancelAgreed(${i})">${Lzh?"取消":"Cancel"}</button></div></div>`).join("")
     : `<div class="lb-empty">${Lzh?"还没有约定。去“寻找饭搭子”。":"None yet — find someone in “Find a lunch buddy”."}</div>`;
   html+=`</div>`;
   box.innerHTML=html;
